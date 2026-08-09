@@ -1,0 +1,194 @@
+Tech stack plan
+===============
+
+Goals
+-----
+- Host on GitHub Pages (static site, low traffic)
+- Simple data setup — avoid running your own server if possible
+- Owner can add/edit games; guests can browse, filter, and random-pick
+
+
+Constraint: GitHub Pages
+------------------------
+GitHub Pages only serves static files (HTML/CSS/JS). It cannot run a
+traditional backend or database. Shared, editable data therefore needs
+either:
+
+  A) A hosted backend-as-a-service (BaaS), or
+  B) No live edits — data lives in the repo as a JSON file and changes
+     ship via git commits / rebuilds
+
+For "owner edits in the browser + guests see the same list," option A
+is the practical path.
+
+
+Confirmed stack
+---------------
+Frontend
+  - Vite + React + TypeScript
+  - Deploy as a static build to GitHub Pages
+  - Mobile-first CSS (simple custom styles; no heavy UI kit required)
+
+Data & auth
+  - Supabase (free tier)
+    - Postgres table for games
+    - Email magic-link or password auth for the owner only
+    - Row-level security: public read, authenticated write
+  - Why Supabase: real shared DB, tiny setup, no server to maintain,
+    fits guest vs owner cleanly
+
+Hosting
+  - GitHub Pages for the frontend
+  - Supabase cloud for DB + auth (free tier is enough)
+
+Game lookup (after BGG token is ready)
+  - BoardGameGeek XML API2
+  - Thin Supabase Edge Function proxy (keeps BGG token server-side)
+  - See "Phasing" and "BGG seam" below
+
+
+Why not "no backend"?
+---------------------
+localStorage only works on one browser — guests would not see your
+collection.
+
+A JSON file in the repo works for a public catalog, but editing means
+changing the file and redeploying (or using the GitHub API as a makeshift
+CMS). That is possible, but slower and more awkward than a small BaaS
+for day-to-day add/edit.
+
+
+Alternatives (if you prefer)
+----------------------------
+1. Firebase (Firestore + Auth) — same idea as Supabase; slightly
+   different tooling
+2. JSON-in-repo + GitHub API writes — zero third-party DB; owner edits
+   commit back to the repo. More DIY, rate limits / token handling
+3. Airtable as the DB — spreadsheet-like admin; frontend reads the API.
+   Easy to edit by hand; less "app-native"
+
+
+Out of scope for v1
+-------------------
+- Custom Node/Express (or similar) server
+- Self-hosted database
+- High-scale caching / CDN complexity beyond GitHub Pages defaults
+
+
+Phasing (build without waiting on BGG approval)
+-----------------------------------------------
+Phase A — ship first (no live BGG calls)
+  - Full app: collection CRUD, filters, search, random pick, auth
+  - Add/edit form is manual entry only
+  - Game table already includes all BGG-aligned columns (nullable)
+  - Frontend talks to a GameLookup interface that returns "unavailable"
+    (or empty search results) until Phase B is wired
+
+Phase B — plug in when token arrives
+  - Register BGG token as a Supabase Edge Function secret
+  - Implement Edge Function: search + thing → JSON mapped to our types
+  - Swap in the real GameLookup client (same interface)
+  - Add UI: search-by-name → pick result → prefill form → edit → save
+  - No schema rewrite expected if Phase A used the data shape below
+
+
+Data shape (Game)
+-----------------
+Stored in Supabase. Shape matches BGG `thing?id=…&stats=1` fields we
+care about, plus our collection metadata. Manual entry and BGG prefill
+write the same columns.
+
+Catalog fields (BGG-aligned; editable; null until set)
+  - bggId              number | null, unique when set (item @id)
+  - name               string (required)
+  - yearPublished      number | null
+  - description        string | null
+  - minPlayers         number | null
+  - maxPlayers         number | null
+  - minPlayTime        number | null (minutes)
+  - maxPlayTime        number | null (minutes)
+  - playTime           number | null (BGG "playingtime")
+  - minAge             number | null
+  - categories         string[]  (boardgamecategory link names)
+  - mechanics          string[]  (boardgamemechanic link names)
+  - bggRating          number | null (average, ~1.0–10.0)
+  - weight             number | null (BGG averageweight — see below)
+  - thumbnailUrl       string | null
+  - imageUrl           string | null
+
+Weight (BGG averageweight) — use this directly; no separate complexity enum
+  - Community average of weight votes
+  - Votes are integers 1–5; API average is a decimal ~1.00–5.00
+  - Store/filter as that number (same type as the API)
+  - UI: show the number; filters use numeric range (e.g. 1–2, 2–3, 3–5)
+
+Collection fields (ours only)
+  - id                 uuid (primary key)
+  - lastPlayed         date | null
+  - playCount          number (default 0)
+  - isFavorite         boolean (default false)
+  - notes              string | null
+  - createdAt          timestamp
+  - updatedAt          timestamp
+
+Access
+  - Guests: read + filter + search + random pick
+  - Owner (signed in): create / update / delete games
+
+
+BGG seam (keep lookup separate, easy to add later)
+--------------------------------------------------
+Keep all BoardGameGeek I/O behind one module so Phase A and Phase B
+share types but not transport.
+
+1. Shared types (app owns these; BGG maps INTO them)
+   - Game              — DB / form shape above
+   - GameLookupResult  — { bggId, name, yearPublished? } for search hits
+   - GameLookupDetails — subset of Game catalog fields returned by thing
+
+2. Interface (frontend depends only on this)
+   - searchGames(query: string): Promise<GameLookupResult[]>
+   - getGameDetails(bggId: number): Promise<GameLookupDetails>
+   - Phase A stub: both throw or return empty / "Lookup unavailable"
+   - Phase B: HTTP client → our Edge Function → mapped JSON
+
+3. Edge Function (Phase B only; never in the static Pages bundle)
+   - GET /bgg-search?q=…
+   - GET /bgg-thing?id=…
+   - Reads BGG_API_TOKEN from secrets
+   - Calls xmlapi2, parses XML, returns GameLookup* JSON
+   - Enforces ~5s spacing / simple cache if needed
+
+4. UI hook points (build in Phase A as no-ops or hidden)
+   - Add Game screen: optional "Search BGG" block above the manual form
+   - On select: fill form fields from GameLookupDetails; user edits; save
+   - Feature flag or env: VITE_BGG_LOOKUP_ENABLED=true when ready
+
+5. What NOT to do in Phase A
+   - Do not put a BGG token in frontend env or git
+   - Do not call boardgamegeek.com from the browser
+   - Do not invent a second "complexity" field that diverges from weight
+
+
+BGG account & token setup (you must do this)
+--------------------------------------------
+1. Create / log in: https://boardgamegeek.com/register
+2. Register an application: https://boardgamegeek.com/applications
+     - Name: Board Game Shelf (or similar)
+     - Non-commercial / personal
+     - Describe: personal collection app; search + thing lookup only
+3. Wait for approval (often a few days)
+4. Application page → Tokens → create a bearer token
+5. Paste the token here when ready. Store only as a Supabase Edge
+   Function secret (never in the frontend or git).
+
+
+Other options checked (not using)
+---------------------------------
+BoardGameFYI, Board Game Atlas (shutdown), paid RapidAPI wrappers
+
+
+Next
+----
+Scaffold is in place (Phase A shell). Next: screens/UI detail, then
+Supabase schema + CRUD, then BGG when the token arrives.
