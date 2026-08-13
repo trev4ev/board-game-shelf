@@ -15,12 +15,12 @@ export function Layout() {
         </NavLink>
         <nav className="app-nav">
           <NavLink to="/">Collection</NavLink>
-          <NavLink to="/games/new">Add game</NavLink>
+          {user && <NavLink to="/games/new">Add game</NavLink>}
           <NavLink to="/login">{user ? 'Account' : 'Owner login'}</NavLink>
         </nav>
       </header>
 
-      {(!isSupabaseConfigured || !isBggLookupEnabled) && (
+      {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
         <aside className="dev-banners" aria-label="Setup status">
           {!isSupabaseConfigured && (
             <p className="banner">
@@ -28,7 +28,7 @@ export function Layout() {
               <code>.env</code> when ready.
             </p>
           )}
-          {!isBggLookupEnabled && (
+          {import.meta.env.DEV && !isBggLookupEnabled && (
             <p className="banner muted">
               BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
               for local search via the Vite proxy.

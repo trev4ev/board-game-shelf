@@ -15,21 +15,36 @@ async function readJson<T>(response: Response): Promise<T> {
   return data as T
 }
 
+function lookupHeaders(): HeadersInit {
+  const key =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+  if (!key) return {}
+  return {
+    Authorization: `Bearer ${key}`,
+    apikey: key,
+  }
+}
+
 /**
- * Calls the local Vite BGG proxy in dev (and later the Edge Function URL).
+ * Local Vite proxy (`/api/bgg`) or the production Edge Function.
  * Token never enters this module.
  */
-export function createHttpGameLookup(baseUrl = '/api/bgg'): GameLookup {
+export function createHttpGameLookup(baseUrl: string): GameLookup {
   return {
     async searchGames(query: string): Promise<GameLookupResult[]> {
       const params = new URLSearchParams({ q: query })
-      const response = await fetch(`${baseUrl}/search?${params}`)
+      const response = await fetch(`${baseUrl}/search?${params}`, {
+        headers: lookupHeaders(),
+      })
       return readJson<GameLookupResult[]>(response)
     },
 
     async getGameDetails(bggId: number): Promise<GameLookupDetails> {
       const params = new URLSearchParams({ id: String(bggId) })
-      const response = await fetch(`${baseUrl}/thing?${params}`)
+      const response = await fetch(`${baseUrl}/thing?${params}`, {
+        headers: lookupHeaders(),
+      })
       return readJson<GameLookupDetails>(response)
     },
   }

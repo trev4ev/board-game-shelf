@@ -1,0 +1,17 @@
+.delete-button {
+  margin-top: 1.25rem;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.65rem 1rem;
+  min-height: 2.75rem;
+  border: 1px solid #c98a8a;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #8b1e1e;
+}
+
+.delete-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

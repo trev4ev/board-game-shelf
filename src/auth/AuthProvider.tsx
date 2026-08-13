@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import { appUrl } from '../lib/appUrl'
 import { supabase } from '../lib/supabase'
 
 type AuthContextValue = {
@@ -23,7 +24,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 function redirectTo() {
-  return `${window.location.origin}/login`
+  return appUrl('login')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

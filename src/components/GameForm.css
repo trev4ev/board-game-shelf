@@ -1,0 +1,77 @@
+.game-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.game-form fieldset {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.game-form legend {
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 0 0.35rem;
+}
+
+.game-form label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.game-form input,
+.game-form textarea {
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+}
+
+.game-form textarea {
+  resize: vertical;
+}
+
+.game-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.game-form-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  font-weight: 500;
+}
+
+.game-form-check input {
+  width: auto;
+}
+
+.game-form button[type='submit'] {
+  justify-self: start;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.7rem 1.15rem;
+  min-height: 2.75rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: var(--text);
+  color: #f4f7f9;
+}
+
+.game-form button[type='submit']:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

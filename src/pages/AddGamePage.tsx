@@ -1,13 +1,18 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { GameForm } from '../components/GameForm'
 import {
   gameLookup,
   isBggLookupEnabled,
-  type GameLookupDetails,
   type GameLookupResult,
 } from '../lib/gameLookup'
-import { createGame, detailsToGameInput } from '../lib/games'
+import {
+  createGame,
+  detailsToGameInput,
+  emptyGameInput,
+} from '../lib/games'
+import type { GameInput } from '../types/game'
 import './AddGamePage.css'
 
 export function AddGamePage() {
@@ -15,9 +20,7 @@ export function AddGamePage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<GameLookupResult[]>([])
-  const [selected, setSelected] = useState<GameLookupDetails | null>(null)
-  const [notes, setNotes] = useState('')
-  const [isFavorite, setIsFavorite] = useState(false)
+  const [form, setForm] = useState<GameInput>(emptyGameInput)
   const [status, setStatus] = useState<
     'idle' | 'searching' | 'loading' | 'saving' | 'error'
   >('idle')
@@ -30,7 +33,6 @@ export function AddGamePage() {
 
     setStatus('searching')
     setError(null)
-    setSelected(null)
     setResults([])
 
     try {
@@ -48,7 +50,14 @@ export function AddGamePage() {
     setError(null)
     try {
       const details = await gameLookup.getGameDetails(hit.bggId)
-      setSelected(details)
+      setForm(
+        detailsToGameInput(details, {
+          notes: form.notes,
+          isFavorite: form.isFavorite,
+          playCount: form.playCount,
+          lastPlayed: form.lastPlayed,
+        }),
+      )
       setStatus('idle')
     } catch (err) {
       setStatus('error')
@@ -57,7 +66,6 @@ export function AddGamePage() {
   }
 
   async function onSave() {
-    if (!selected) return
     if (!user) {
       setError('Sign in as the owner before saving to your collection.')
       return
@@ -66,12 +74,7 @@ export function AddGamePage() {
     setStatus('saving')
     setError(null)
     try {
-      const game = await createGame(
-        detailsToGameInput(selected, {
-          notes: notes.trim() || null,
-          isFavorite,
-        }),
-      )
+      const game = await createGame(form)
       navigate(`/games/${game.id}`)
     } catch (err) {
       setStatus('error')
@@ -88,23 +91,18 @@ export function AddGamePage() {
     <section>
       <h1>Add game</h1>
       <p className="lede">
-        Search BoardGameGeek, review the details, then save to your Supabase
-        collection.
+        Search BoardGameGeek to prefill, or enter a game by hand. Saving requires
+        an owner account.
       </p>
 
       {!user && (
         <p className="hint">
-          You can search without signing in, but saving requires an owner
-          account. <Link to="/login">Sign in</Link>
+          You can fill in details without signing in, but saving requires an
+          owner account. <Link to="/login">Sign in</Link>
         </p>
       )}
 
-      {!isBggLookupEnabled ? (
-        <p className="hint">
-          BGG lookup is off. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code> in{' '}
-          <code>.env</code> and restart the dev server.
-        </p>
-      ) : (
+      {isBggLookupEnabled ? (
         <div className="bgg-lookup">
           <form className="bgg-search" onSubmit={onSearch}>
             <label htmlFor="bgg-query">Search BGG</label>
@@ -125,8 +123,6 @@ export function AddGamePage() {
               briefly.
             </p>
           </form>
-
-          {error && <p className="error">{error}</p>}
 
           {results.length > 0 && (
             <ul className="bgg-results">
@@ -150,90 +146,25 @@ export function AddGamePage() {
           )}
 
           {status === 'loading' && <p className="hint">Loading details…</p>}
-
-          {selected && (
-            <div className="bgg-prefill">
-              <h2>Ready to save</h2>
-              {selected.thumbnailUrl && (
-                <img
-                  src={selected.thumbnailUrl}
-                  alt=""
-                  className="bgg-thumb"
-                  width={120}
-                  height={120}
-                />
-              )}
-              <dl className="bgg-details">
-                <div>
-                  <dt>Name</dt>
-                  <dd>{selected.name}</dd>
-                </div>
-                <div>
-                  <dt>Players</dt>
-                  <dd>
-                    {selected.minPlayers ?? '?'}–{selected.maxPlayers ?? '?'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Play time</dt>
-                  <dd>
-                    {selected.minPlayTime ?? selected.playTime ?? '?'}
-                    {selected.maxPlayTime != null &&
-                    selected.maxPlayTime !== selected.minPlayTime
-                      ? `–${selected.maxPlayTime}`
-                      : ''}{' '}
-                    min
-                  </dd>
-                </div>
-                <div>
-                  <dt>Weight</dt>
-                  <dd>{selected.weight ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt>BGG rating</dt>
-                  <dd>{selected.bggRating ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt>Categories</dt>
-                  <dd>{selected.categories.join(', ') || '—'}</dd>
-                </div>
-                <div>
-                  <dt>Mechanics</dt>
-                  <dd>{selected.mechanics.join(', ') || '—'}</dd>
-                </div>
-              </dl>
-
-              <label className="notes-field">
-                Notes
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Optional notes for your shelf"
-                />
-              </label>
-
-              <label className="favorite-field">
-                <input
-                  type="checkbox"
-                  checked={isFavorite}
-                  onChange={(e) => setIsFavorite(e.target.checked)}
-                />
-                Mark as favorite
-              </label>
-
-              <button
-                type="button"
-                className="save-button"
-                onClick={onSave}
-                disabled={status === 'saving' || !user}
-              >
-                {status === 'saving' ? 'Saving…' : 'Save to collection'}
-              </button>
-            </div>
-          )}
         </div>
+      ) : (
+        <p className="hint">
+          BGG lookup is off. You can still add a game manually, or set{' '}
+          <code>VITE_BGG_LOOKUP_ENABLED=true</code> for search.
+        </p>
       )}
+
+      {error && <p className="error">{error}</p>}
+
+      <h2 className="form-heading">Game details</h2>
+      <GameForm
+        value={form}
+        onChange={setForm}
+        onSubmit={onSave}
+        submitLabel="Save to collection"
+        busy={status === 'saving'}
+        disabled={!user}
+      />
     </section>
   )
 }

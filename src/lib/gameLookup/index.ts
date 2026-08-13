@@ -10,12 +10,19 @@ export type {
 export { GameLookupUnavailableError } from './types'
 
 /**
- * Local/dev: set true to use the Vite `/api/bgg` proxy (token stays server-side).
- * Production: keep false until the Supabase Edge Function is deployed.
+ * Local/dev: Vite `/api/bgg` proxy (token stays on the Vite server).
+ * Production: Supabase Edge Function `/functions/v1/bgg`.
  */
 export const isBggLookupEnabled =
   import.meta.env.VITE_BGG_LOOKUP_ENABLED === 'true'
 
+export function bggLookupBaseUrl(): string {
+  if (import.meta.env.DEV) return '/api/bgg'
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  if (!supabaseUrl) return '/api/bgg'
+  return `${supabaseUrl.replace(/\/$/, '')}/functions/v1/bgg`
+}
+
 export const gameLookup: GameLookup = isBggLookupEnabled
-  ? createHttpGameLookup()
+  ? createHttpGameLookup(bggLookupBaseUrl())
   : stubGameLookup

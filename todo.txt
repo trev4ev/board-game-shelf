@@ -19,14 +19,14 @@ Phase A — core app
 [x] Row Level Security: public read, authenticated write (in migration)
 [x] Owner auth (email) wired to Login page
 [x] Collection list from Supabase
-[ ] Name search
-[ ] Multi-select filters (players, time, category, weight, favorites)
-[ ] Random pick from filtered results
-[ ] Add game form (manual entry)
-[ ] Edit / delete game (owner only)
+[x] Name search
+[x] Multi-select filters (players, time, category, weight, favorites)
+[x] Random pick from filtered results
+[x] Add game form (manual entry)
+[x] Edit / delete game (owner only)
 [x] Game detail page (basic)
-[ ] Mobile-friendly polish
-[ ] Deploy to GitHub Pages
+[x] Mobile-friendly polish
+[x] Deploy to GitHub Pages
 
 
 Phase B — BGG prefill (after API token approved)
@@ -36,9 +36,9 @@ Phase B — BGG prefill (after API token approved)
 [x] Validate token (npm run test:bgg)
 [x] Real GameLookup HTTP client + Add Game search/prefill preview
 [x] Persist prefilled game to Supabase collection
-[ ] Register BGG bearer token as Supabase secret
-[ ] Edge Function: search + thing → JSON (same shape as /api/bgg)
-[ ] Point client at Edge Function for production / GitHub Pages
+[x] Register BGG bearer token as Supabase secret
+[x] Edge Function: search + thing → JSON (same shape as /api/bgg)
+[x] Point client at Edge Function for production / GitHub Pages
 
 
 Deferred (not in scope yet)

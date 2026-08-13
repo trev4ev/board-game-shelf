@@ -33,13 +33,15 @@ export type Game = {
 /** Fields the owner fills or edits on add/edit forms */
 export type GameInput = Omit<Game, 'id' | 'createdAt' | 'updatedAt'>
 
+export type TimeBucketId = '30' | '45' | '60' | '90' | 'long'
+export type WeightBucketId = '1-2' | '2-3' | '3-5'
+
 export type GameFilters = {
-  nameQuery?: string
-  playerCount?: number
-  maxPlayTime?: number
-  categories?: string[]
-  /** Inclusive weight range matching BGG scale */
-  minWeight?: number
-  maxWeight?: number
-  favoritesOnly?: boolean
+  nameQuery: string
+  /** Selected player counts; 5 means 5+ */
+  playerCounts: number[]
+  timeBuckets: TimeBucketId[]
+  categories: string[]
+  weightBuckets: WeightBucketId[]
+  favoritesOnly: boolean
 }

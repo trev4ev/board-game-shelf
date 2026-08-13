@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { getGame } from '../lib/games'
 import type { Game } from '../types/game'
+import './GameDetailPage.css'
 
 export function GameDetailPage() {
   const { id } = useParams()
@@ -54,7 +55,7 @@ export function GameDetailPage() {
   }
 
   return (
-    <section>
+    <section className="game-detail">
       <p className="hint">
         <Link to="/">← Collection</Link>
         {user && (
@@ -64,12 +65,15 @@ export function GameDetailPage() {
           </>
         )}
       </p>
-      <h1>{game.name}</h1>
-      {game.thumbnailUrl && (
+      <h1>
+        {game.name}
+        {game.isFavorite ? ' ★' : ''}
+      </h1>
+      {(game.imageUrl || game.thumbnailUrl) && (
         <img
-          src={game.imageUrl ?? game.thumbnailUrl}
+          src={game.imageUrl ?? game.thumbnailUrl ?? ''}
           alt=""
-          style={{ maxWidth: 220, borderRadius: 8, marginBottom: '1rem' }}
+          className="game-detail-image"
         />
       )}
       <dl className="bgg-details">
@@ -81,11 +85,30 @@ export function GameDetailPage() {
         </div>
         <div>
           <dt>Play time</dt>
-          <dd>{game.playTime != null ? `${game.playTime} min` : '—'}</dd>
+          <dd>
+            {game.minPlayTime ?? game.playTime ?? '—'}
+            {game.maxPlayTime != null &&
+            game.maxPlayTime !== (game.minPlayTime ?? game.playTime)
+              ? `–${game.maxPlayTime}`
+              : ''}
+            {game.playTime != null || game.minPlayTime != null ? ' min' : ''}
+          </dd>
         </div>
         <div>
           <dt>Weight</dt>
           <dd>{game.weight ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>BGG rating</dt>
+          <dd>{game.bggRating ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Year</dt>
+          <dd>{game.yearPublished ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Min age</dt>
+          <dd>{game.minAge ?? '—'}</dd>
         </div>
         <div>
           <dt>Categories</dt>
@@ -96,10 +119,24 @@ export function GameDetailPage() {
           <dd>{game.mechanics.join(', ') || '—'}</dd>
         </div>
         <div>
+          <dt>Last played</dt>
+          <dd>{game.lastPlayed || '—'}</dd>
+        </div>
+        <div>
+          <dt>Play count</dt>
+          <dd>{game.playCount}</dd>
+        </div>
+        <div>
           <dt>Notes</dt>
           <dd>{game.notes || '—'}</dd>
         </div>
       </dl>
+      {game.description && (
+        <div className="game-description">
+          <h2>Description</h2>
+          <p>{game.description}</p>
+        </div>
+      )}
     </section>
   )
 }
