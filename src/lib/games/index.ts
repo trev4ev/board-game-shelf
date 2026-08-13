@@ -1,4 +1,12 @@
-export { listGames, getGame, createGame, replaceGame, deleteGame, detailsToGameInput } from './api'
+export {
+  listGames,
+  getGame,
+  createGame,
+  replaceGame,
+  patchGame,
+  deleteGame,
+  detailsToGameInput,
+} from './api'
 export { rowToGame, gameInputToRow } from './map'
 export { emptyGameInput, gameToInput } from './empty'
 export {
@@ -7,8 +15,13 @@ export {
   filtersAreActive,
   uniqueCategories,
   pickRandomGame,
-  PLAYER_FILTER_OPTIONS,
-  TIME_FILTER_OPTIONS,
-  WEIGHT_FILTER_OPTIONS,
+  formatPlayerFilter,
+  formatTimeFilter,
+  PLAYER_SLIDER_MIN,
+  PLAYER_SLIDER_MAX,
+  TIME_SLIDER_MIN,
+  TIME_SLIDER_MAX,
+  TIME_SLIDER_STEP,
+  COMPLEXITY_SLIDER_STEP,
 } from './filter'
 export type { GameRow } from './map'

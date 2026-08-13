@@ -2,6 +2,7 @@ import { supabase } from '../supabase'
 import type { Game, GameInput } from '../../types/game'
 import { gameInputToRow, rowToGame, type GameRow } from './map'
 import type { GameLookupDetails } from '../gameLookup'
+import { roundDecimal, roundInt } from './round'
 
 function requireClient() {
   if (!supabase) {
@@ -64,6 +65,26 @@ export async function deleteGame(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function patchGame(
+  id: string,
+  patch: Partial<Pick<GameInput, 'notes' | 'isFavorite'>>,
+): Promise<Game> {
+  const client = requireClient()
+  const row: Record<string, unknown> = {}
+  if ('notes' in patch) row.notes = patch.notes
+  if ('isFavorite' in patch) row.is_favorite = patch.isFavorite
+
+  const { data, error } = await client
+    .from('games')
+    .update(row)
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return rowToGame(data as GameRow)
+}
+
 export function detailsToGameInput(
   details: GameLookupDetails,
   extras: Partial<
@@ -71,20 +92,20 @@ export function detailsToGameInput(
   > = {},
 ): GameInput {
   return {
-    bggId: details.bggId,
+    bggId: roundInt(details.bggId) ?? details.bggId,
     name: details.name,
-    yearPublished: details.yearPublished,
+    yearPublished: roundInt(details.yearPublished),
     description: details.description,
-    minPlayers: details.minPlayers,
-    maxPlayers: details.maxPlayers,
-    minPlayTime: details.minPlayTime,
-    maxPlayTime: details.maxPlayTime,
-    playTime: details.playTime,
-    minAge: details.minAge,
+    minPlayers: roundInt(details.minPlayers),
+    maxPlayers: roundInt(details.maxPlayers),
+    minPlayTime: roundInt(details.minPlayTime),
+    maxPlayTime: roundInt(details.maxPlayTime),
+    playTime: roundInt(details.playTime),
+    minAge: roundInt(details.minAge),
     categories: details.categories,
     mechanics: details.mechanics,
-    bggRating: details.bggRating,
-    weight: details.weight,
+    bggRating: roundDecimal(details.bggRating, 2),
+    weight: roundDecimal(details.weight, 2),
     thumbnailUrl: details.thumbnailUrl,
     imageUrl: details.imageUrl,
     lastPlayed: extras.lastPlayed ?? null,

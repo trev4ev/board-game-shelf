@@ -1,3 +1,25 @@
+.add-game-split {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 48rem) {
+  .add-game-split.has-selection {
+    grid-template-columns: minmax(16rem, 0.95fr) minmax(20rem, 1.15fr);
+    align-items: start;
+  }
+
+  .add-game-form-pane {
+    position: sticky;
+    top: 0.75rem;
+  }
+
+  .bgg-results {
+    max-height: min(70vh, 36rem);
+    overflow: auto;
+  }
+}
+
 .bgg-lookup {
   display: grid;
   gap: 1.25rem;
@@ -70,6 +92,15 @@
 
 .bgg-results button:hover:not(:disabled) {
   background: var(--banner-bg);
+}
+
+.bgg-results button.selected {
+  background: var(--text);
+  color: #f4f7f9;
+}
+
+.bgg-results button.selected .bgg-result-year {
+  color: #d5dee4;
 }
 
 .bgg-result-name {
@@ -168,7 +199,7 @@
 }
 
 .form-heading {
-  margin: 1.5rem 0 0.75rem;
+  margin: 0 0 0.75rem;
   font-family: var(--font-display);
   font-size: 1.2rem;
 }

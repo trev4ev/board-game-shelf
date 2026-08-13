@@ -1,20 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { RangeSlider } from '../components/RangeSlider'
 import {
+  COMPLEXITY_SLIDER_STEP,
   emptyFilters,
   filterGames,
   filtersAreActive,
+  formatPlayerFilter,
+  formatTimeFilter,
   listGames,
   pickRandomGame,
   uniqueCategories,
-  PLAYER_FILTER_OPTIONS,
-  TIME_FILTER_OPTIONS,
-  WEIGHT_FILTER_OPTIONS,
+  PLAYER_SLIDER_MAX,
+  PLAYER_SLIDER_MIN,
+  TIME_SLIDER_MAX,
+  TIME_SLIDER_MIN,
+  TIME_SLIDER_STEP,
 } from '../lib/games'
-import { complexityFieldLabel, formatComplexity } from '../lib/complexity'
+import { COMPLEXITY_MAX, COMPLEXITY_MIN, complexityFieldLabel, formatComplexity } from '../lib/complexity'
 import { isSupabaseConfigured } from '../lib/supabase'
-import type { Game, GameFilters, WeightBucketId } from '../types/game'
+import type { Game, GameFilters } from '../types/game'
 import './CollectionPage.css'
 
 function toggleValue<T>(list: T[], value: T): T[] {
@@ -134,89 +140,42 @@ export function CollectionPage() {
           </div>
 
           <div className="filter-groups">
-            <fieldset>
-              <legend>Players</legend>
-              <div className="chip-row">
-                {PLAYER_FILTER_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    className={
-                      filters.playerCounts.includes(option.value) ? 'chip on' : 'chip'
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.playerCounts.includes(option.value)}
-                      onChange={() =>
-                        patchFilters({
-                          playerCounts: toggleValue(
-                            filters.playerCounts,
-                            option.value,
-                          ),
-                        })
-                      }
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Time</legend>
-              <div className="chip-row">
-                {TIME_FILTER_OPTIONS.map((option) => (
-                  <label
-                    key={option.id}
-                    className={
-                      filters.timeBuckets.includes(option.id) ? 'chip on' : 'chip'
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.timeBuckets.includes(option.id)}
-                      onChange={() =>
-                        patchFilters({
-                          timeBuckets: toggleValue(
-                            filters.timeBuckets,
-                            option.id,
-                          ),
-                        })
-                      }
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>{complexityFieldLabel()}</legend>
-              <div className="chip-row">
-                {WEIGHT_FILTER_OPTIONS.map((option) => (
-                  <label
-                    key={option.id}
-                    className={
-                      filters.weightBuckets.includes(option.id) ? 'chip on' : 'chip'
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.weightBuckets.includes(option.id)}
-                      onChange={() =>
-                        patchFilters({
-                          weightBuckets: toggleValue<WeightBucketId>(
-                            filters.weightBuckets,
-                            option.id,
-                          ),
-                        })
-                      }
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <RangeSlider
+              label="Players"
+              min={PLAYER_SLIDER_MIN}
+              max={PLAYER_SLIDER_MAX}
+              valueMin={filters.playerMin}
+              valueMax={filters.playerMax}
+              onChange={(playerMin, playerMax) =>
+                patchFilters({ playerMin, playerMax })
+              }
+              formatValue={formatPlayerFilter}
+            />
+            <RangeSlider
+              label="Time"
+              min={TIME_SLIDER_MIN}
+              max={TIME_SLIDER_MAX}
+              step={TIME_SLIDER_STEP}
+              valueMin={filters.timeMin}
+              valueMax={filters.timeMax}
+              onChange={(timeMin, timeMax) => patchFilters({ timeMin, timeMax })}
+              formatValue={formatTimeFilter}
+            />
+            <RangeSlider
+              label={complexityFieldLabel()}
+              min={COMPLEXITY_MIN}
+              max={COMPLEXITY_MAX}
+              step={COMPLEXITY_SLIDER_STEP}
+              valueMin={filters.complexityMin}
+              valueMax={filters.complexityMax}
+              onChange={(complexityMin, complexityMax) =>
+                patchFilters({
+                  complexityMin: Number(complexityMin.toFixed(1)),
+                  complexityMax: Number(complexityMax.toFixed(1)),
+                })
+              }
+              formatValue={(value) => value.toFixed(1)}
+            />
 
             {categories.length > 0 && (
               <fieldset>

@@ -1,4 +1,5 @@
 import type { Game, GameInput } from '../../types/game'
+import { roundDecimal, roundInt } from './round'
 
 export function emptyGameInput(): GameInput {
   return {
@@ -27,20 +28,20 @@ export function emptyGameInput(): GameInput {
 
 export function gameToInput(game: Game): GameInput {
   return {
-    bggId: game.bggId,
+    bggId: roundInt(game.bggId),
     name: game.name,
-    yearPublished: game.yearPublished,
+    yearPublished: roundInt(game.yearPublished),
     description: game.description,
-    minPlayers: game.minPlayers,
-    maxPlayers: game.maxPlayers,
-    minPlayTime: game.minPlayTime,
-    maxPlayTime: game.maxPlayTime,
-    playTime: game.playTime,
-    minAge: game.minAge,
+    minPlayers: roundInt(game.minPlayers),
+    maxPlayers: roundInt(game.maxPlayers),
+    minPlayTime: roundInt(game.minPlayTime),
+    maxPlayTime: roundInt(game.maxPlayTime),
+    playTime: roundInt(game.playTime),
+    minAge: roundInt(game.minAge),
     categories: game.categories,
     mechanics: game.mechanics,
-    bggRating: game.bggRating,
-    weight: game.weight,
+    bggRating: roundDecimal(game.bggRating, 2),
+    weight: roundDecimal(game.weight, 2),
     thumbnailUrl: game.thumbnailUrl,
     imageUrl: game.imageUrl,
     lastPlayed: game.lastPlayed,

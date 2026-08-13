@@ -1,51 +1,38 @@
 import { COMPLEXITY_MAX, COMPLEXITY_MIN } from '../complexity'
-import type { Game, GameFilters, TimeBucketId, WeightBucketId } from '../../types/game'
+import type { Game, GameFilters } from '../../types/game'
 
-export const PLAYER_FILTER_OPTIONS = [
-  { value: 1, label: '1' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-  { value: 4, label: '4' },
-  { value: 5, label: '5+' },
-] as const
-
-export const TIME_FILTER_OPTIONS: { id: TimeBucketId; label: string }[] = [
-  { id: '30', label: '≤ 30 min' },
-  { id: '45', label: '≤ 45 min' },
-  { id: '60', label: '≤ 60 min' },
-  { id: '90', label: '≤ 90 min' },
-  { id: 'long', label: '90+ min' },
-]
-
-export const WEIGHT_FILTER_OPTIONS: {
-  id: WeightBucketId
-  label: string
-  min: number
-  max: number
-}[] = [
-  { id: '1-2', label: `${COMPLEXITY_MIN}–2 light`, min: COMPLEXITY_MIN, max: 2 },
-  { id: '2-3', label: '2–3 medium', min: 2, max: 3 },
-  { id: '3-5', label: `3–${COMPLEXITY_MAX} heavy`, min: 3, max: COMPLEXITY_MAX },
-]
+export const PLAYER_SLIDER_MIN = 1
+export const PLAYER_SLIDER_MAX = 10
+export const TIME_SLIDER_MIN = 0
+export const TIME_SLIDER_MAX = 180
+export const TIME_SLIDER_STEP = 15
+export const COMPLEXITY_SLIDER_STEP = 0.1
 
 export function emptyFilters(): GameFilters {
   return {
     nameQuery: '',
-    playerCounts: [],
-    timeBuckets: [],
+    playerMin: PLAYER_SLIDER_MIN,
+    playerMax: PLAYER_SLIDER_MAX,
+    timeMin: TIME_SLIDER_MIN,
+    timeMax: TIME_SLIDER_MAX,
+    complexityMin: COMPLEXITY_MIN,
+    complexityMax: COMPLEXITY_MAX,
     categories: [],
-    weightBuckets: [],
     favoritesOnly: false,
   }
 }
 
 export function filtersAreActive(filters: GameFilters): boolean {
+  const defaults = emptyFilters()
   return (
     filters.nameQuery.trim() !== '' ||
-    filters.playerCounts.length > 0 ||
-    filters.timeBuckets.length > 0 ||
+    filters.playerMin !== defaults.playerMin ||
+    filters.playerMax !== defaults.playerMax ||
+    filters.timeMin !== defaults.timeMin ||
+    filters.timeMax !== defaults.timeMax ||
+    filters.complexityMin !== defaults.complexityMin ||
+    filters.complexityMax !== defaults.complexityMax ||
     filters.categories.length > 0 ||
-    filters.weightBuckets.length > 0 ||
     filters.favoritesOnly
   )
 }
@@ -60,65 +47,54 @@ export function uniqueCategories(games: Game[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
-function supportsPlayerCount(game: Game, count: number): boolean {
-  const min = game.minPlayers
-  const max = game.maxPlayers
-  if (count >= 5) {
-    if (max == null) return min == null || min <= 5
-    return max >= 5
-  }
-  if (min == null && max == null) return false
-  const lo = min ?? 1
-  const hi = max ?? 99
-  return count >= lo && count <= hi
-}
-
 function playMinutes(game: Game): number | null {
   return game.playTime ?? game.maxPlayTime ?? game.minPlayTime
 }
 
-function matchesTimeBucket(minutes: number, bucket: TimeBucketId): boolean {
-  switch (bucket) {
-    case '30':
-      return minutes <= 30
-    case '45':
-      return minutes <= 45
-    case '60':
-      return minutes <= 60
-    case '90':
-      return minutes <= 90
-    case 'long':
-      return minutes >= 90
-  }
+function playerRangeOverlaps(game: Game, filterMin: number, filterMax: number) {
+  if (game.minPlayers == null && game.maxPlayers == null) return false
+  const gameMin = game.minPlayers ?? PLAYER_SLIDER_MIN
+  const gameMax =
+    game.maxPlayers ??
+    (filterMax >= PLAYER_SLIDER_MAX ? Number.POSITIVE_INFINITY : PLAYER_SLIDER_MAX)
+  const maxBound =
+    filterMax >= PLAYER_SLIDER_MAX ? Number.POSITIVE_INFINITY : filterMax
+  return gameMin <= maxBound && gameMax >= filterMin
 }
 
-function matchesWeight(weight: number, bucket: WeightBucketId): boolean {
-  const option = WEIGHT_FILTER_OPTIONS.find((item) => item.id === bucket)
-  if (!option) return false
-  return weight >= option.min && weight <= option.max
+function timeInRange(game: Game, filterMin: number, filterMax: number) {
+  const minutes = playMinutes(game)
+  if (minutes == null) return false
+  const maxBound =
+    filterMax >= TIME_SLIDER_MAX ? Number.POSITIVE_INFINITY : filterMax
+  return minutes >= filterMin && minutes <= maxBound
 }
 
 export function filterGames(games: Game[], filters: GameFilters): Game[] {
   const query = filters.nameQuery.trim().toLowerCase()
+  const defaults = emptyFilters()
+  const playersActive =
+    filters.playerMin !== defaults.playerMin ||
+    filters.playerMax !== defaults.playerMax
+  const timeActive =
+    filters.timeMin !== defaults.timeMin || filters.timeMax !== defaults.timeMax
+  const complexityActive =
+    filters.complexityMin !== defaults.complexityMin ||
+    filters.complexityMax !== defaults.complexityMax
 
   return games.filter((game) => {
     if (query && !game.name.toLowerCase().includes(query)) return false
     if (filters.favoritesOnly && !game.isFavorite) return false
 
-    if (filters.playerCounts.length > 0) {
-      const ok = filters.playerCounts.some((count) =>
-        supportsPlayerCount(game, count),
-      )
-      if (!ok) return false
+    if (
+      playersActive &&
+      !playerRangeOverlaps(game, filters.playerMin, filters.playerMax)
+    ) {
+      return false
     }
 
-    if (filters.timeBuckets.length > 0) {
-      const minutes = playMinutes(game)
-      if (minutes == null) return false
-      const ok = filters.timeBuckets.some((bucket) =>
-        matchesTimeBucket(minutes, bucket),
-      )
-      if (!ok) return false
+    if (timeActive && !timeInRange(game, filters.timeMin, filters.timeMax)) {
+      return false
     }
 
     if (filters.categories.length > 0) {
@@ -128,12 +104,14 @@ export function filterGames(games: Game[], filters: GameFilters): Game[] {
       if (!ok) return false
     }
 
-    if (filters.weightBuckets.length > 0) {
+    if (complexityActive) {
       if (game.weight == null) return false
-      const ok = filters.weightBuckets.some((bucket) =>
-        matchesWeight(game.weight!, bucket),
-      )
-      if (!ok) return false
+      if (
+        game.weight < filters.complexityMin ||
+        game.weight > filters.complexityMax
+      ) {
+        return false
+      }
     }
 
     return true
@@ -144,4 +122,13 @@ export function pickRandomGame(games: Game[]): Game | null {
   if (games.length === 0) return null
   const index = Math.floor(Math.random() * games.length)
   return games[index] ?? null
+}
+
+export function formatPlayerFilter(value: number): string {
+  return value >= PLAYER_SLIDER_MAX ? `${PLAYER_SLIDER_MAX}+` : String(value)
+}
+
+export function formatTimeFilter(value: number): string {
+  if (value >= TIME_SLIDER_MAX) return `${TIME_SLIDER_MAX}+ min`
+  return `${value} min`
 }
