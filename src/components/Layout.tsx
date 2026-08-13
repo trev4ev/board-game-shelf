@@ -1,9 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import { isBggLookupEnabled } from '../lib/gameLookup'
 import { isSupabaseConfigured } from '../lib/supabase'
 import './Layout.css'
 
 export function Layout() {
+  const { user } = useAuth()
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -13,7 +16,7 @@ export function Layout() {
         <nav className="app-nav">
           <NavLink to="/">Collection</NavLink>
           <NavLink to="/games/new">Add game</NavLink>
-          <NavLink to="/login">Owner login</NavLink>
+          <NavLink to="/login">{user ? 'Account' : 'Owner login'}</NavLink>
         </nav>
       </header>
 
@@ -27,8 +30,8 @@ export function Layout() {
           )}
           {!isBggLookupEnabled && (
             <p className="banner muted">
-              BGG lookup disabled (Phase A). Manual entry only until the API
-              token is wired.
+              BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
+              for local search via the Vite proxy.
             </p>
           )}
         </aside>

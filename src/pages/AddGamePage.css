@@ -1,0 +1,168 @@
+.bgg-lookup {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bgg-search label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.bgg-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bgg-search-row input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+.bgg-search-row button,
+.bgg-results button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.bgg-search-row button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: var(--text);
+  color: #f4f7f9;
+}
+
+.bgg-search-row button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bgg-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.bgg-results li + li {
+  border-top: 1px solid var(--border);
+}
+
+.bgg-results button {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+}
+
+.bgg-results button:hover:not(:disabled) {
+  background: var(--banner-bg);
+}
+
+.bgg-result-name {
+  font-weight: 600;
+}
+
+.bgg-result-year {
+  margin-left: 0.35rem;
+  color: var(--text-muted);
+}
+
+.bgg-prefill {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.bgg-prefill h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.bgg-thumb {
+  object-fit: contain;
+  border-radius: 0.35rem;
+  background: var(--banner-bg);
+}
+
+.bgg-details {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.bgg-details div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.bgg-details dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.bgg-details dd {
+  margin: 0;
+}
+
+.error {
+  margin: 0;
+  color: #8b1e1e;
+}
+
+.notes-field,
+.favorite-field {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.notes-field textarea {
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  resize: vertical;
+}
+
+.favorite-field {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  font-weight: 500;
+}
+
+.save-button {
+  justify-self: start;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: var(--text);
+  color: #f4f7f9;
+}
+
+.save-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

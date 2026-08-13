@@ -6,7 +6,7 @@ Tech plan / data shape / BGG seam: see `tech-stack.txt`
 ## Run locally
 
 ```bash
-cp .env.example .env   # optional until Supabase is ready
+cp .env.example .env   # add Project URL + publishable key
 npm install
 npm run dev
 ```
@@ -15,7 +15,7 @@ npm run dev
 
 - Vite + React + TypeScript
 - React Router
-- Supabase client (inactive until env vars are set)
+- Supabase client (inactive until env vars are set; uses **publishable** key)
 - `src/lib/gameLookup` stub — no BGG calls yet
 
 ## Scripts

@@ -1,0 +1,49 @@
+Board Game Shelf — todo
+=======================
+
+
+Done
+----
+[x] Create local repo + GitHub remote
+[x] Product / tech docs (readme.txt, tech-stack.txt)
+[x] Vite + React + TypeScript scaffold
+[x] Routes shell (collection, add, detail, edit, login)
+[x] Game types aligned with BGG + collection fields
+[x] GameLookup stub + feature flag (Phase A)
+[x] Supabase client wiring (publishable key via .env)
+
+
+Phase A — core app
+------------------
+[x] Supabase games table matching Game data shape (SQL migration ready)
+[x] Row Level Security: public read, authenticated write (in migration)
+[x] Owner auth (email) wired to Login page
+[x] Collection list from Supabase
+[ ] Name search
+[ ] Multi-select filters (players, time, category, weight, favorites)
+[ ] Random pick from filtered results
+[ ] Add game form (manual entry)
+[ ] Edit / delete game (owner only)
+[x] Game detail page (basic)
+[ ] Mobile-friendly polish
+[ ] Deploy to GitHub Pages
+
+
+Phase B — BGG prefill (after API token approved)
+-----------------------------------------------
+[x] Add BGG_API_TOKEN to local .env (server-only)
+[x] Local Vite BGG proxy + XML→JSON mapping
+[x] Validate token (npm run test:bgg)
+[x] Real GameLookup HTTP client + Add Game search/prefill preview
+[x] Persist prefilled game to Supabase collection
+[ ] Register BGG bearer token as Supabase secret
+[ ] Edge Function: search + thing → JSON (same shape as /api/bgg)
+[ ] Point client at Edge Function for production / GitHub Pages
+
+
+Deferred (not in scope yet)
+---------------------------
+[ ] Expansion / base-game linking
+[ ] Exclude recently played from random pick
+[ ] Photos beyond BGG thumbnail/image
+[ ] Shortlist / "tonight's candidates" before random pick

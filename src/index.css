@@ -59,3 +59,29 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
 }
+
+.bgg-details {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.bgg-details div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.bgg-details dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.bgg-details dd {
+  margin: 0;
+}
+
+.error {
+  color: #8b1e1e;
+}
