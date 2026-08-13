@@ -5,52 +5,105 @@
 }
 
 .app-header {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1.25rem;
-  padding: max(1rem, env(safe-area-inset-top))
-    max(1.25rem, env(safe-area-inset-right)) 1rem
-    max(1.25rem, env(safe-area-inset-left));
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  text-decoration: none;
+  gap: 1rem 1.5rem;
+  padding: max(0.9rem, env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right)) 0.9rem
+    max(1.5rem, env(safe-area-inset-left));
 }
 
 .app-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
+  justify-content: center;
+  gap: 0.35rem 1.35rem;
 }
 
 .app-nav a {
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.95rem;
-  padding: 0.35rem 0;
+  font-weight: 500;
+  padding: 0.35rem 0.1rem 0.5rem;
   min-height: 2.5rem;
   display: inline-flex;
   align-items: center;
+  border-bottom: 2px solid transparent;
 }
 
 .app-nav a:hover,
 .app-nav a.active {
+  color: var(--accent);
+}
+
+.app-nav a.active {
+  border-bottom-color: var(--accent);
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.owner-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
   color: var(--text);
+}
+
+.owner-avatar {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.owner-meta {
+  display: grid;
+  line-height: 1.15;
+}
+
+.owner-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.owner-role {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.owner-login {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.owner-login:hover {
+  color: var(--accent);
+}
+
+.add-game-btn {
+  min-height: 2.45rem;
+  padding: 0.45rem 0.85rem;
 }
 
 .dev-banners {
   display: grid;
   gap: 0.35rem;
-  padding: 0.65rem 1.25rem;
-  background: var(--banner-bg);
+  padding: 0.65rem 1.5rem;
+  background: var(--accent-soft);
   border-bottom: 1px solid var(--border);
 }
 
@@ -70,8 +123,20 @@
 
 .app-main {
   flex: 1;
-  width: min(100%, 64rem);
+  width: min(100%, 74rem);
   margin: 0 auto;
-  padding: 1.5rem max(1.25rem, env(safe-area-inset-right))
-    max(3rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  padding: 0.75rem max(1.5rem, env(safe-area-inset-right))
+    max(3rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+}
+
+@media (max-width: 52rem) {
+  .app-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .app-nav {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    order: 3;
+  }
 }

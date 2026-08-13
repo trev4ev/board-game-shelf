@@ -139,7 +139,7 @@ export function LoginPage() {
             disabled={busy}
           />
         </label>
-        <button type="submit" disabled={busy || !password}>
+        <button type="submit" className="btn btn-primary" disabled={busy || !password}>
           {busy ? 'Please wait…' : 'Sign in with password'}
         </button>
       </form>
@@ -174,7 +174,7 @@ export function LoginPage() {
                 placeholder="123456"
               />
             </label>
-            <button type="submit" disabled={busy}>
+            <button type="submit" className="btn btn-primary" disabled={busy}>
               {busy ? 'Verifying…' : 'Verify code'}
             </button>
           </form>

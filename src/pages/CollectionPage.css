@@ -1,214 +1,191 @@
-.collection-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.collection-header .lede {
-  margin-bottom: 0;
-}
-
-.button-link {
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.65rem 0.95rem;
-  min-height: 2.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 0.4rem;
-  background: var(--text);
-  color: #f4f7f9;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.button-link:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.button-secondary {
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.65rem 0.95rem;
-  min-height: 2.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  background: #fff;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.collection-tools {
+.collection-layout {
   display: grid;
-  gap: 0.9rem;
-  margin: 1rem 0 0.5rem;
+  gap: 1.5rem 1.75rem;
+}
+
+.collection-main,
+.collection-results {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+@media (min-width: 58rem) {
+  .collection-layout {
+    grid-template-columns: minmax(0, 1fr) 20.5rem;
+    grid-template-areas:
+      'hero filters'
+      'results filters';
+    align-items: start;
+  }
+
+  .collection-main {
+    grid-area: hero;
+  }
+
+  .filter-panel {
+    grid-area: filters;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .collection-results {
+    grid-area: results;
+  }
+}
+
+.collection-hero {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 44rem) {
+  .collection-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(14rem, 0.9fr);
+    align-items: start;
+  }
+
+  .collection-hero .lede {
+    margin-bottom: 0;
+  }
 }
 
 .collection-search-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  align-items: stretch;
 }
 
-.search-field {
-  flex: 1 1 12rem;
-  min-width: 0;
-}
-
-.search-field input {
-  width: 100%;
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.65rem 0.75rem;
-  min-height: 2.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  background: #fff;
-  color: var(--text);
-}
-
-.filter-groups {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.filter-groups fieldset {
-  margin: 0;
-  padding: 0;
-  border: none;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.filter-groups legend {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.7rem;
-  min-height: 2.5rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: #fff;
-  font-size: 0.9rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.chip.on {
-  background: var(--text);
-  color: #f4f7f9;
-  border-color: var(--text);
-}
-
-.chip input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.collection-search-row .search-field {
+  flex: 1 1 14rem;
 }
 
 .filter-status {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
-.text-button {
+.filter-panel {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+}
+
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.filter-panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #f3ece3;
   border: none;
-  background: none;
-  color: var(--text);
-  text-decoration: underline;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
   cursor: pointer;
+}
+
+.clear-filters:hover {
+  color: var(--accent);
+}
+
+.filter-fieldset {
+  margin: 0;
   padding: 0;
+  border: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.filter-fieldset legend {
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 0.2rem;
+}
+
+.more-chip {
+  background: var(--surface);
+  color: var(--accent);
+  border-style: dashed;
+}
+
+.filter-tip {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.75rem 0.8rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.filter-tip svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: var(--accent);
+}
+
+.game-groups {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.game-group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.game-letter {
+  margin: 0.5rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .game-list {
   list-style: none;
-  margin: 1.25rem 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.5rem;
-}
-
-.game-card {
-  display: flex;
-  gap: 0.85rem;
-  align-items: center;
-  padding: 0.75rem;
-  min-height: 4.5rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: #fff;
-  text-decoration: none;
-  color: var(--text);
-}
-
-.game-card:hover {
-  background: var(--banner-bg);
-}
-
-.game-card img,
-.game-card-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 0.35rem;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--banner-bg);
-}
-
-.game-card-body {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.game-card-name {
-  font-weight: 600;
-}
-
-.game-card-meta {
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  gap: 0.55rem;
 }
 
 .pick-dialog {
   width: min(calc(100vw - 2rem), 22rem);
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
 }
 
 .pick-dialog::backdrop {
-  background: rgb(20 33 43 / 0.45);
+  background: rgb(45 28 64 / 0.4);
 }
 
 .pick-dialog h2 {
   margin: 0 0 0.75rem;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.25rem;
 }
 
 .pick-dialog img {
@@ -218,7 +195,10 @@
 
 .pick-name {
   margin: 0.5rem 0 0.15rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--accent);
 }
 
 .pick-actions {
@@ -227,20 +207,4 @@
   gap: 0.65rem;
   align-items: center;
   margin-top: 1rem;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.error {
-  color: #8b1e1e;
 }

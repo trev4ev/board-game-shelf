@@ -24,4 +24,5 @@ export {
   TIME_SLIDER_STEP,
   COMPLEXITY_SLIDER_STEP,
 } from './filter'
+export { formatPlayerRange, formatPlayTime, groupGamesByLetter } from './display'
 export type { GameRow } from './map'

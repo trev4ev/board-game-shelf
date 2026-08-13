@@ -1,16 +1,27 @@
 :root {
   --font-body: 'Outfit', 'Segoe UI', sans-serif;
-  --font-display: 'Syne', 'Outfit', sans-serif;
-  --bg: #e8eef2;
-  --text: #14212b;
-  --text-muted: #4a5a66;
-  --border: #c5d0d8;
-  --banner-bg: #dce6ec;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --bg: #f6f0e6;
+  --surface: #fffcf7;
+  --text: #3b2458;
+  --text-muted: #6a6370;
+  --accent: #5c3d7a;
+  --accent-hover: #4d3268;
+  --accent-soft: #efe6f4;
+  --green: #6f8a63;
+  --green-hover: #5d7554;
+  --green-ink: #3e5539;
+  --green-soft: #e6f0e2;
+  --border: #e3d9cc;
+  --banner-bg: var(--accent-soft);
+  --radius: 0.7rem;
+  --radius-lg: 1rem;
+  --shadow: 0 1px 2px rgb(59 36 88 / 0.05);
   color: var(--text);
-  background:
-    radial-gradient(ellipse 70% 45% at 0% 0%, #cfdfe8 0%, transparent 55%),
-    radial-gradient(ellipse 55% 40% at 100% 10%, #d5e4d8 0%, transparent 50%),
-    var(--bg);
+  background-color: var(--bg);
+  background-image: url('./assets/paper-grain.webp');
+  background-repeat: repeat;
+  background-size: 512px 512px;
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -39,17 +50,29 @@ textarea {
 
 h1 {
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-size: clamp(2rem, 4.5vw, 2.85rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: var(--accent);
   margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-family: var(--font-display);
+  color: var(--accent);
+}
+
+a {
+  color: var(--accent);
 }
 
 .lede {
   margin: 0 0 1.25rem;
   color: var(--text-muted);
-  max-width: 40rem;
+  max-width: 38rem;
+  font-size: 1.02rem;
 }
 
 .hint {
@@ -92,4 +115,16 @@ code {
 
 .error {
   color: #8b1e1e;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
