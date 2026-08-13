@@ -18,7 +18,7 @@ export type Game = {
   mechanics: string[]
   /** BGG average rating (~1–10) */
   bggRating: number | null
-  /** BGG averageweight (~1.00–5.00) */
+  /** BGG averageweight (~1.00–5.00); shown as complexity */
   weight: number | null
   thumbnailUrl: string | null
   imageUrl: string | null

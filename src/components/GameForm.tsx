@@ -1,4 +1,9 @@
 import type { FormEvent } from 'react'
+import {
+  COMPLEXITY_MAX,
+  COMPLEXITY_MIN,
+  complexityFieldLabel,
+} from '../lib/complexity'
 import type { GameInput } from '../types/game'
 import './GameForm.css'
 
@@ -149,13 +154,13 @@ export function GameForm({
         </div>
         <div className="game-form-row">
           <label>
-            Weight (1–5)
+            {complexityFieldLabel()}
             <input
               type="number"
               inputMode="decimal"
               step="0.01"
-              min={1}
-              max={5}
+              min={COMPLEXITY_MIN}
+              max={COMPLEXITY_MAX}
               value={value.weight ?? ''}
               onChange={(e) => patch({ weight: parseNum(e.target.value) })}
             />

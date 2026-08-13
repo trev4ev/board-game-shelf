@@ -4,11 +4,19 @@ import { useAuth } from '../auth/AuthProvider'
 import './LoginPage.css'
 
 export function LoginPage() {
-  const { user, loading, isConfigured, sendLoginEmail, verifyOtp, signOut } =
-    useAuth()
+  const {
+    user,
+    loading,
+    isConfigured,
+    sendLoginEmail,
+    verifyOtp,
+    signInWithPassword,
+    signOut,
+  } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
+  const [password, setPassword] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -22,6 +30,20 @@ export function LoginPage() {
       setSent(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send login email')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onPasswordSignIn(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    try {
+      await signInWithPassword(email.trim(), password)
+      navigate('/games/new')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not sign in')
     } finally {
       setBusy(false)
     }
@@ -87,11 +109,11 @@ export function LoginPage() {
     <section>
       <h1>Owner login</h1>
       <p className="lede">
-        Enter your email. We’ll send a magic link and a one-time code — no
-        password.
+        Sign in with a password (no email sent), or request a one-time login
+        email. Supabase’s built-in mailer allows about two emails per hour.
       </p>
 
-      <form className="auth-form" onSubmit={onSendLink}>
+      <form className="auth-form" onSubmit={onPasswordSignIn}>
         <label>
           Email
           <input
@@ -106,8 +128,31 @@ export function LoginPage() {
             disabled={busy}
           />
         </label>
-        <button type="submit" disabled={busy}>
-          {busy && !sent ? 'Sending…' : sent ? 'Resend email' : 'Send login email'}
+        <label>
+          Password
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            disabled={busy}
+          />
+        </label>
+        <button type="submit" disabled={busy || !password}>
+          {busy ? 'Please wait…' : 'Sign in with password'}
+        </button>
+      </form>
+
+      <p className="hint">
+        Need a password? In the Supabase dashboard go to Authentication → Users,
+        open your user (or add one), set a password, and leave the user
+        confirmed.
+      </p>
+
+      <form className="auth-form" onSubmit={onSendLink}>
+        <button type="submit" disabled={busy || !email.trim()} className="button-secondary">
+          {busy && !sent ? 'Sending…' : sent ? 'Resend login email' : 'Email me a login code'}
         </button>
       </form>
 

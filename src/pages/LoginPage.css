@@ -46,6 +46,12 @@
   color: var(--text);
 }
 
+.auth-form button[type='submit'].button-secondary {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+}
+
 .auth-actions {
   display: flex;
   flex-wrap: wrap;

@@ -12,6 +12,7 @@ import {
   TIME_FILTER_OPTIONS,
   WEIGHT_FILTER_OPTIONS,
 } from '../lib/games'
+import { complexityFieldLabel, formatComplexity } from '../lib/complexity'
 import { isSupabaseConfigured } from '../lib/supabase'
 import type { Game, GameFilters, WeightBucketId } from '../types/game'
 import './CollectionPage.css'
@@ -190,7 +191,7 @@ export function CollectionPage() {
             </fieldset>
 
             <fieldset>
-              <legend>Weight</legend>
+              <legend>{complexityFieldLabel()}</legend>
               <div className="chip-row">
                 {WEIGHT_FILTER_OPTIONS.map((option) => (
                   <label
@@ -305,7 +306,7 @@ export function CollectionPage() {
                     {game.minPlayers ?? '?'}–{game.maxPlayers ?? '?'} players
                     {game.playTime != null ? ` · ${game.playTime} min` : ''}
                     {game.weight != null
-                      ? ` · weight ${game.weight.toFixed(1)}`
+                      ? ` · complexity ${formatComplexity(game.weight)}`
                       : ''}
                   </span>
                 </span>

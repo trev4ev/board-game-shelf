@@ -9,10 +9,10 @@ Core functionality
 ------------------
 - Add, edit, and remove games from your collection
 - Store game details aligned with BoardGameGeek fields (players, play
-  time, categories, mechanics, weight 1–5, images, etc.) plus collection
+  time, categories, mechanics, complexity 1–5, images, etc.) plus collection
   fields (favorites, last played, play count, notes)
 - Search by game name
-- Filter with multi-select support for players, time, category, weight,
+- Filter with multi-select support for players, time, category, complexity,
   favorites, and other stored fields
 - Browse the filtered list and select a game
 - Randomly pick a game from the current (filtered) results

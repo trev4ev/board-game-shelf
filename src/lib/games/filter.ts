@@ -1,3 +1,4 @@
+import { COMPLEXITY_MAX, COMPLEXITY_MIN } from '../complexity'
 import type { Game, GameFilters, TimeBucketId, WeightBucketId } from '../../types/game'
 
 export const PLAYER_FILTER_OPTIONS = [
@@ -22,9 +23,9 @@ export const WEIGHT_FILTER_OPTIONS: {
   min: number
   max: number
 }[] = [
-  { id: '1-2', label: '1–2 light', min: 1, max: 2 },
+  { id: '1-2', label: `${COMPLEXITY_MIN}–2 light`, min: COMPLEXITY_MIN, max: 2 },
   { id: '2-3', label: '2–3 medium', min: 2, max: 3 },
-  { id: '3-5', label: '3–5 heavy', min: 3, max: 5 },
+  { id: '3-5', label: `3–${COMPLEXITY_MAX} heavy`, min: 3, max: COMPLEXITY_MAX },
 ]
 
 export function emptyFilters(): GameFilters {

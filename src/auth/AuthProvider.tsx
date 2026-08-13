@@ -18,6 +18,7 @@ type AuthContextValue = {
   isConfigured: boolean
   sendLoginEmail: (email: string) => Promise<void>
   verifyOtp: (email: string, token: string) => Promise<void>
+  signInWithPassword: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -78,6 +79,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }, [])
 
+  const signInWithPassword = useCallback(
+    async (email: string, password: string) => {
+      if (!supabase) throw new Error('Supabase is not configured')
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
+    },
+    [],
+  )
+
   const signOut = useCallback(async () => {
     if (!supabase) throw new Error('Supabase is not configured')
     const { error } = await supabase.auth.signOut()
@@ -92,9 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isConfigured: Boolean(supabase),
       sendLoginEmail,
       verifyOtp,
+      signInWithPassword,
       signOut,
     }),
-    [session, loading, sendLoginEmail, verifyOtp, signOut],
+    [session, loading, sendLoginEmail, verifyOtp, signInWithPassword, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

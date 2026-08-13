@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { complexityFieldLabel, formatComplexity } from '../lib/complexity'
 import { getGame } from '../lib/games'
 import type { Game } from '../types/game'
 import './GameDetailPage.css'
@@ -95,8 +96,8 @@ export function GameDetailPage() {
           </dd>
         </div>
         <div>
-          <dt>Weight</dt>
-          <dd>{game.weight ?? '—'}</dd>
+          <dt>{complexityFieldLabel()}</dt>
+          <dd>{game.weight != null ? formatComplexity(game.weight) : '—'}</dd>
         </div>
         <div>
           <dt>BGG rating</dt>
