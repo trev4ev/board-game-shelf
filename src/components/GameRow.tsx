@@ -1,7 +1,7 @@
-import { Brain, ChevronRight, Clock, Star, Users } from 'lucide-react'
+import { Brain, CalendarDays, ChevronRight, Clock, Star, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { formatComplexity } from '../lib/complexity'
-import { formatPlayTime, formatPlayerRange } from '../lib/games/display'
+import { formatLastPlayed, formatPlayTime, formatPlayerRange } from '../lib/games/display'
 import type { Game } from '../types/game'
 import './GameRow.css'
 
@@ -43,6 +43,10 @@ export function GameRow({ game }: { game: Game }) {
               {formatComplexity(game.weight)}
             </span>
           ) : null}
+          <span>
+            <CalendarDays size={14} strokeWidth={2} aria-hidden />
+            {game.lastPlayed ? formatLastPlayed(game.lastPlayed) : 'Never played'}
+          </span>
         </span>
       </span>
       <ChevronRight className="game-row-chevron" size={18} strokeWidth={2} aria-hidden />

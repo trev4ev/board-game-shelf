@@ -9,6 +9,7 @@ import { CollectionPage } from './pages/CollectionPage'
 import { EditGamePage } from './pages/EditGamePage'
 import { GameDetailPage } from './pages/GameDetailPage'
 import { LoginPage } from './pages/LoginPage'
+import { LogPlayPage } from './pages/LogPlayPage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
               <Route path="review" element={<AddGameReviewPage />} />
             </Route>
             <Route path="games/:id" element={<GameDetailPage />} />
+            <Route path="games/:id/play" element={<LogPlayPage />} />
             <Route path="games/:id/edit" element={<EditGamePage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

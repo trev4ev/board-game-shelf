@@ -1,27 +1,30 @@
 :root {
   --font-body: 'Outfit', 'Segoe UI', sans-serif;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --bg: #f6f0e6;
-  --surface: #fffcf7;
+  --bg: #f1eef4;
+  --surface: #fbf9fc;
+  --surface-hover: #f4f0f8;
   --text: #3b2458;
-  --text-muted: #6a6370;
+  --text-muted: #6a6472;
   --accent: #5c3d7a;
   --accent-hover: #4d3268;
-  --accent-soft: #efe6f4;
+  --accent-soft: #ece6f2;
   --green: #6f8a63;
   --green-hover: #5d7554;
   --green-ink: #3e5539;
   --green-soft: #e6f0e2;
-  --border: #e3d9cc;
+  --border: #ddd6e4;
   --banner-bg: var(--accent-soft);
   --radius: 0.7rem;
   --radius-lg: 1rem;
   --shadow: 0 1px 2px rgb(59 36 88 / 0.05);
   color: var(--text);
   background-color: var(--bg);
-  background-image: url('./assets/paper-grain.webp');
+  background-image:
+    linear-gradient(rgb(241 238 244 / 0.78), rgb(241 238 244 / 0.78)),
+    url('./assets/paper-grain.webp');
   background-repeat: repeat;
-  background-size: 512px 512px;
+  background-size: auto, 512px 512px;
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -35,9 +38,19 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+}
+
+#root {
+  min-height: 100dvh;
 }
 
 button,

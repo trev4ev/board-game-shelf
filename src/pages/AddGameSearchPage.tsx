@@ -27,10 +27,6 @@ export function AddGameSearchPage() {
   return (
     <section>
       <h1>Add game</h1>
-      <p className="lede">
-        Search BoardGameGeek to prefill, or enter a game by hand. Saving requires
-        an owner account.
-      </p>
 
       {!user && (
         <p className="hint">
@@ -57,10 +53,6 @@ export function AddGameSearchPage() {
                     {status === 'searching' ? 'Searching…' : 'Search'}
                   </button>
                 </div>
-                <p className="hint">
-                  BGG allows about one request every 5 seconds — searches may
-                  pause briefly.
-                </p>
               </form>
 
               {results.length > 0 && (

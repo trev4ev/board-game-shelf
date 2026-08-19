@@ -13,8 +13,8 @@
 }
 
 .game-row:hover {
-  background: #fffaf2;
-  border-color: #d8cfc3;
+  background: var(--surface-hover);
+  border-color: #cfc6d8;
 }
 
 .game-row-thumb,
@@ -51,7 +51,7 @@
 }
 
 .game-row-star.on {
-  color: var(--accent);
+  color: var(--green);
 }
 
 .game-row-meta {
@@ -69,10 +69,10 @@
 }
 
 .game-row-meta svg {
-  color: var(--accent);
+  color: var(--green);
 }
 
 .game-row-chevron {
-  color: #c4b9ae;
+  color: #c5bdc9;
   flex-shrink: 0;
 }

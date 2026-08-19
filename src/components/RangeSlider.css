@@ -20,7 +20,7 @@
 }
 
 .range-slider-label svg {
-  color: var(--accent);
+  color: var(--green);
 }
 
 .range-slider-value {
@@ -42,7 +42,7 @@
   height: 0.28rem;
   transform: translateY(-50%);
   border-radius: 999px;
-  background: #e4ddd6;
+  background: #e0dae6;
 }
 
 .range-slider-fill {

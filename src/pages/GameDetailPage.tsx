@@ -1,20 +1,32 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Star } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { Button } from '../components/Button'
+import { LogPlayForm } from '../components/LogPlayForm'
+import { Toggle } from '../components/Toggle'
 import { complexityFieldLabel, formatComplexity } from '../lib/complexity'
-import { getGame, patchGame } from '../lib/games'
+import { createPlay, formatLastPlayed, formatPlace, getGame, listPlays, patchGame } from '../lib/games'
+import { useMediaQuery } from '../lib/useMediaQuery'
 import type { Game } from '../types/game'
+import type { Play, PlayInput } from '../types/play'
 import './GameDetailPage.css'
 
 export function GameDetailPage() {
   const { id } = useParams()
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const isDesktop = useMediaQuery('(min-width: 48rem)')
   const [game, setGame] = useState<Game | null>(null)
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveHint, setSaveHint] = useState<string | null>(null)
+  const [playError, setPlayError] = useState<string | null>(null)
+  const [formKey, setFormKey] = useState(0)
+  const [plays, setPlays] = useState<Play[]>([])
+  const playDialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
     if (!id) return
@@ -35,12 +47,23 @@ export function GameDetailPage() {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
+
+    listPlays(id)
+      .then((rows) => {
+        if (!cancelled) setPlays(rows)
+      })
+      .catch(() => {
+        if (!cancelled) setPlays([])
+      })
     return () => {
       cancelled = true
     }
   }, [id])
 
-  async function saveShelf(patch: { notes?: string | null; isFavorite?: boolean }) {
+  async function saveShelf(
+    patch: { notes?: string | null; isFavorite?: boolean; playCount?: number; lastPlayed?: string | null },
+    hint = 'Saved',
+  ) {
     if (!id || !user) return
     setSaving(true)
     setSaveHint(null)
@@ -49,9 +72,40 @@ export function GameDetailPage() {
       const updated = await patchGame(id, patch)
       setGame(updated)
       setNotes(updated.notes ?? '')
-      setSaveHint('Saved')
+      setSaveHint(hint)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function openLogPlay() {
+    if (!game) return
+    if (!isDesktop) {
+      navigate(`/games/${game.id}/play`)
+      return
+    }
+    setPlayError(null)
+    setFormKey((key) => key + 1)
+    playDialogRef.current?.showModal()
+  }
+
+  async function submitPlay(input: PlayInput) {
+    if (!game) return
+    setSaving(true)
+    setPlayError(null)
+    setError(null)
+    try {
+      const updated = await createPlay(input, game)
+      setGame(updated)
+      setNotes(updated.notes ?? '')
+      setSaveHint('Logged a play')
+      playDialogRef.current?.close()
+      const rows = await listPlays(updated.id)
+      setPlays(rows)
+    } catch (err) {
+      setPlayError(err instanceof Error ? err.message : 'Could not log play')
     } finally {
       setSaving(false)
     }
@@ -89,7 +143,15 @@ export function GameDetailPage() {
       </p>
       <h1>
         {game.name}
-        {game.isFavorite ? ' ★' : ''}
+        {game.isFavorite ? (
+          <Star
+            className="game-title-star"
+            size={22}
+            strokeWidth={2}
+            fill="currentColor"
+            aria-label="Favorite"
+          />
+        ) : null}
       </h1>
       {(game.imageUrl || game.thumbnailUrl) && (
         <img
@@ -98,75 +160,24 @@ export function GameDetailPage() {
           className="game-detail-image"
         />
       )}
-      <dl className="bgg-details">
-        <div>
-          <dt>Players</dt>
-          <dd>
-            {game.minPlayers ?? '?'}–{game.maxPlayers ?? '?'}
-          </dd>
-        </div>
-        <div>
-          <dt>Play time</dt>
-          <dd>
-            {game.minPlayTime ?? game.playTime ?? '—'}
-            {game.maxPlayTime != null &&
-            game.maxPlayTime !== (game.minPlayTime ?? game.playTime)
-              ? `–${game.maxPlayTime}`
-              : ''}
-            {game.playTime != null || game.minPlayTime != null ? ' min' : ''}
-          </dd>
-        </div>
-        <div>
-          <dt>{complexityFieldLabel()}</dt>
-          <dd>{game.weight != null ? formatComplexity(game.weight) : '—'}</dd>
-        </div>
-        <div>
-          <dt>BGG rating</dt>
-          <dd>{game.bggRating != null ? game.bggRating.toFixed(2) : '—'}</dd>
-        </div>
-        <div>
-          <dt>Year</dt>
-          <dd>{game.yearPublished ?? '—'}</dd>
-        </div>
-        <div>
-          <dt>Min age</dt>
-          <dd>{game.minAge ?? '—'}</dd>
-        </div>
-        <div>
-          <dt>Categories</dt>
-          <dd>{game.categories.join(', ') || '—'}</dd>
-        </div>
-        <div>
-          <dt>Mechanics</dt>
-          <dd>{game.mechanics.join(', ') || '—'}</dd>
-        </div>
-        <div>
-          <dt>Last played</dt>
-          <dd>{game.lastPlayed || '—'}</dd>
-        </div>
-        <div>
-          <dt>Play count</dt>
-          <dd>{game.playCount}</dd>
-        </div>
-      </dl>
 
       <div className="shelf-fields">
-        <h2>On your shelf</h2>
         {user ? (
           <>
-            <label className="favorite-toggle">
-              <input
-                type="checkbox"
+            <div className="game-actions">
+              <Toggle
+                label="Favorite"
                 checked={game.isFavorite}
-                disabled={saving}
-                onChange={(event) => saveShelf({ isFavorite: event.target.checked })}
+                onChange={(isFavorite) => void saveShelf({ isFavorite })}
               />
-              Favorite
-            </label>
+              <Button variant="accent" onClick={openLogPlay} disabled={saving}>
+                Log play
+              </Button>
+            </div>
             <label className="notes-editor">
               Notes
               <textarea
-                rows={4}
+                rows={3}
                 value={notes}
                 onChange={(event) => {
                   setNotes(event.target.value)
@@ -186,19 +197,119 @@ export function GameDetailPage() {
             </p>
           </>
         ) : (
-          <>
-            <p className="hint">{game.isFavorite ? 'Favorite' : 'Not marked as favorite'}</p>
-            <p>{game.notes || 'No notes yet.'}</p>
-          </>
+          <p className="hint">
+            {game.isFavorite ? 'Favorite' : 'Not marked as favorite'}
+            {game.notes ? ` · ${game.notes}` : ''}
+          </p>
         )}
       </div>
 
-      {game.description && (
-        <div className="game-description">
-          <h2>Description</h2>
-          <p>{game.description}</p>
-        </div>
-      )}
+      <div className="play-history">
+        <h2>Plays</h2>
+        {plays.length === 0 ? (
+          <p className="hint">No plays logged yet.</p>
+        ) : (
+          <ol className="play-history-list">
+            {plays.map((play) => (
+              <li key={play.id} className="play-history-item">
+                <p className="play-history-date">{formatLastPlayed(play.playedOn)}</p>
+                <ol className="play-history-players">
+                  {play.players.map((player, index) => {
+                    const tied =
+                      index > 0 && play.players[index - 1]?.place === player.place
+                    return (
+                      <li key={`${play.id}-${index}`}>
+                        <span className="play-history-place">
+                          {formatPlace(player.place)}
+                          {tied ? ' (tie)' : ''}
+                        </span>
+                        <span className="play-history-name">{player.name}</span>
+                        {player.score != null ? (
+                          <span className="play-history-score">{player.score}</span>
+                        ) : null}
+                      </li>
+                    )
+                  })}
+                </ol>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <details className="game-catalog">
+        <summary>Game details</summary>
+        <dl className="bgg-details">
+          <div>
+            <dt>Players</dt>
+            <dd>
+              {game.minPlayers ?? '?'}–{game.maxPlayers ?? '?'}
+            </dd>
+          </div>
+          <div>
+            <dt>Play time</dt>
+            <dd>
+              {game.minPlayTime ?? game.playTime ?? '—'}
+              {game.maxPlayTime != null &&
+              game.maxPlayTime !== (game.minPlayTime ?? game.playTime)
+                ? `–${game.maxPlayTime}`
+                : ''}
+              {game.playTime != null || game.minPlayTime != null ? ' min' : ''}
+            </dd>
+          </div>
+          <div>
+            <dt>{complexityFieldLabel()}</dt>
+            <dd>{game.weight != null ? formatComplexity(game.weight) : '—'}</dd>
+          </div>
+          <div>
+            <dt>BGG rating</dt>
+            <dd>{game.bggRating != null ? game.bggRating.toFixed(2) : '—'}</dd>
+          </div>
+          <div>
+            <dt>Year</dt>
+            <dd>{game.yearPublished ?? '—'}</dd>
+          </div>
+          <div>
+            <dt>Min age</dt>
+            <dd>{game.minAge ?? '—'}</dd>
+          </div>
+          <div>
+            <dt>Categories</dt>
+            <dd>{game.categories.join(', ') || '—'}</dd>
+          </div>
+          <div>
+            <dt>Mechanics</dt>
+            <dd>{game.mechanics.join(', ') || '—'}</dd>
+          </div>
+          <div>
+            <dt>Last played</dt>
+            <dd>{formatLastPlayed(game.lastPlayed)}</dd>
+          </div>
+          <div>
+            <dt>Play count</dt>
+            <dd>{game.playCount}</dd>
+          </div>
+        </dl>
+        {game.description ? (
+          <div className="game-description">
+            <h2>Description</h2>
+            <p>{game.description}</p>
+          </div>
+        ) : null}
+      </details>
+
+      <dialog ref={playDialogRef} className="log-play-dialog">
+        <h2>Log play</h2>
+        <LogPlayForm
+          key={formKey}
+          gameId={game.id}
+          gameName={game.name}
+          busy={saving}
+          error={playError}
+          onSubmit={(input) => void submitPlay(input)}
+          onCancel={() => playDialogRef.current?.close()}
+        />
+      </dialog>
     </section>
   )
 }

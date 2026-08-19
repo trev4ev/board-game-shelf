@@ -5,47 +5,39 @@
 }
 
 .app-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem 1.5rem;
   padding: max(0.9rem, env(safe-area-inset-top))
     max(1.5rem, env(safe-area-inset-right)) 0.9rem
     max(1.5rem, env(safe-area-inset-left));
 }
 
-.app-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem 1.35rem;
-}
-
-.app-nav a {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: 0.35rem 0.1rem 0.5rem;
-  min-height: 2.5rem;
-  display: inline-flex;
-  align-items: center;
-  border-bottom: 2px solid transparent;
-}
-
-.app-nav a:hover,
-.app-nav a.active {
-  color: var(--accent);
-}
-
-.app-nav a.active {
-  border-bottom-color: var(--accent);
-}
-
 .app-header-actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.85rem;
+}
+
+.app-header-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.header-menu-btn {
+  display: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
 }
 
 .owner-chip {
@@ -62,8 +54,8 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--green-soft);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -80,7 +72,8 @@
 
 .owner-role {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--green);
+  font-weight: 600;
 }
 
 .owner-login {
@@ -129,14 +122,33 @@
     max(3rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
 }
 
-@media (max-width: 52rem) {
-  .app-header {
-    grid-template-columns: 1fr auto;
+@media (max-width: 57.99rem) {
+  .header-menu-btn {
+    display: grid;
   }
 
-  .app-nav {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    order: 3;
+  .app-header-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 20;
+    min-width: 14rem;
+    padding: 0.85rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgb(59 36 88 / 0.12);
+  }
+
+  .app-header-actions.open .app-header-menu {
+    display: flex;
+  }
+
+  .app-header-menu .add-game-btn {
+    width: 100%;
   }
 }

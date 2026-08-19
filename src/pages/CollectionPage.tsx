@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Brain, Clock, Dices, Lightbulb, Users, X } from 'lucide-react'
+import { Brain, Clock, Dices, SlidersHorizontal, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { Button, ButtonLink } from '../components/Button'
 import { Chip } from '../components/Chip'
 import { GameRow } from '../components/GameRow'
-import { PickCard } from '../components/PickCard'
 import { RangeSlider } from '../components/RangeSlider'
 import { SearchField } from '../components/SearchField'
 import { Toggle } from '../components/Toggle'
@@ -25,9 +24,10 @@ import {
   TIME_SLIDER_MIN,
   TIME_SLIDER_STEP,
 } from '../lib/games'
-import { formatPlayTime, formatPlayerRange, groupGamesByLetter } from '../lib/games/display'
+import { formatPlayTime, formatPlayerRange } from '../lib/games/display'
 import { COMPLEXITY_MAX, COMPLEXITY_MIN, formatComplexity } from '../lib/complexity'
 import { isSupabaseConfigured } from '../lib/supabase'
+import { useMediaQuery } from '../lib/useMediaQuery'
 import type { Game, GameFilters } from '../types/game'
 import './CollectionPage.css'
 
@@ -39,12 +39,14 @@ function toggleValue<T>(list: T[], value: T): T[] {
 
 export function CollectionPage() {
   const { user } = useAuth()
+  const isDesktop = useMediaQuery('(min-width: 58rem)')
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(isSupabaseConfigured)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<GameFilters>(emptyFilters)
   const [picked, setPicked] = useState<Game | null>(null)
   const [showAllCategories, setShowAllCategories] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -77,12 +79,30 @@ export function CollectionPage() {
   }, [])
 
   const visible = useMemo(() => filterGames(games, filters), [games, filters])
-  const grouped = useMemo(() => groupGamesByLetter(visible), [visible])
   const categories = useMemo(() => uniqueCategories(games), [games])
   const visibleCategories = showAllCategories
     ? categories
     : categories.slice(0, CATEGORY_PREVIEW)
   const filtersOn = filtersAreActive(filters)
+  const toolsReady = !loading && !error && isSupabaseConfigured
+  const showFilterSheet = toolsReady && (isDesktop || showFilters)
+  const resultSummary = `Showing ${visible.length} of ${games.length} ${
+    games.length === 1 ? 'game' : 'games'
+  }`
+
+  useEffect(() => {
+    if (isDesktop || !showFilters) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowFilters(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [isDesktop, showFilters])
 
   function patchFilters(partial: Partial<GameFilters>) {
     setFilters((current) => ({ ...current, ...partial }))
@@ -94,24 +114,13 @@ export function CollectionPage() {
     if (game) dialogRef.current?.showModal()
   }
 
-  const welcome = user?.email
-    ? `Welcome to ${ownerFirstName(user.email)}'s board game shelf. Browse, discover, and find the perfect game for your next session.`
-    : 'Browse, discover, and find the perfect game for your next session.'
-
-  const toolsReady = !loading && !error && isSupabaseConfigured
-
   return (
     <section className="collection-page">
       <div className="collection-layout">
+        <div className="collection-primary">
         <div className="collection-main">
           <div className="collection-hero">
-            <div>
-              <h1>Game collection</h1>
-              <p className="lede">{welcome}</p>
-            </div>
-            {toolsReady ? (
-              <PickCard disabled={visible.length === 0} onPick={onRandomPick} />
-            ) : null}
+            <h1>Game collection</h1>
           </div>
 
           {!isSupabaseConfigured && (
@@ -138,42 +147,108 @@ export function CollectionPage() {
 
           {toolsReady && (
             <div className="collection-search-row">
-              <SearchField
-                label="Search games"
-                value={filters.nameQuery}
-                onChange={(e) => patchFilters({ nameQuery: e.target.value })}
-                placeholder="Search games"
-                autoComplete="off"
-              />
+              <div className="collection-search-tools">
+                <SearchField
+                  label="Search games"
+                  value={filters.nameQuery}
+                  onChange={(e) => patchFilters({ nameQuery: e.target.value })}
+                  placeholder="Search games"
+                  autoComplete="off"
+                />
+                {!isDesktop && (
+                  <button
+                    type="button"
+                    className={
+                      showFilters || filtersOn ? 'filter-toggle on' : 'filter-toggle'
+                    }
+                    aria-pressed={showFilters}
+                    onClick={() => setShowFilters((open) => !open)}
+                  >
+                    <SlidersHorizontal size={18} strokeWidth={2} aria-hidden />
+                    <span className="visually-hidden">
+                      {showFilters ? 'Hide filters' : 'Show filters'}
+                    </span>
+                  </button>
+                )}
+              </div>
               <Button
-                className="btn-stack"
+                variant="accent"
+                className="random-pick-btn"
                 onClick={onRandomPick}
                 disabled={visible.length === 0}
               >
-                <Dices size={20} strokeWidth={2} aria-hidden />
-                <span className="btn-stack-copy">
-                  <strong>Random pick</strong>
-                  <small>From filtered games</small>
-                </span>
+                <Dices size={18} strokeWidth={2} aria-hidden />
+                Random pick
               </Button>
             </div>
           )}
 
         </div>
 
-        {toolsReady && (
+        <div className="collection-results">
+          {toolsReady && <p className="filter-status">{resultSummary}</p>}
+
+          {!loading && !error && games.length === 0 && isSupabaseConfigured && (
+            <p className="hint">
+              No games yet.
+              {user ? (
+                <>
+                  {' '}
+                  <Link to="/games/new">Add your first game</Link>.
+                </>
+              ) : (
+                ' Sign in as the owner to add games.'
+              )}
+            </p>
+          )}
+
+          {visible.length > 0 && (
+            <ul className="game-list">
+              {visible.map((game) => (
+                <li key={game.id}>
+                  <GameRow game={game} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!loading && !error && games.length > 0 && visible.length === 0 && (
+            <p className="hint">No games match these filters.</p>
+          )}
+        </div>
+        </div>
+
+        {showFilterSheet && (
           <aside className="filter-panel panel">
-            <div className="filter-panel-header">
-              <h2>Filters</h2>
-              {filtersOn ? (
-                <button
-                  type="button"
-                  className="clear-filters"
-                  onClick={() => setFilters(emptyFilters())}
-                >
-                  <X size={14} strokeWidth={2.25} aria-hidden />
-                  Clear filters
-                </button>
+            <div className="filter-panel-top">
+              <div className="filter-panel-header">
+                <h2>Filters</h2>
+                <div className="filter-panel-header-actions">
+                  {filtersOn ? (
+                    <button
+                      type="button"
+                      className="clear-filters"
+                      onClick={() => setFilters(emptyFilters())}
+                    >
+                      Clear filters
+                    </button>
+                  ) : null}
+                  {!isDesktop ? (
+                    <button
+                      type="button"
+                      className="filter-close"
+                      onClick={() => setShowFilters(false)}
+                    >
+                      <X size={22} strokeWidth={2} aria-hidden />
+                      <span className="visually-hidden">Close filters</span>
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+              {!isDesktop ? (
+                <p className="filter-panel-results" aria-live="polite">
+                  {resultSummary}
+                </p>
               ) : null}
             </div>
 
@@ -278,56 +353,8 @@ export function CollectionPage() {
               checked={filters.favoritesOnly}
               onChange={(favoritesOnly) => patchFilters({ favoritesOnly })}
             />
-
-            <p className="filter-tip">
-              <Lightbulb size={16} strokeWidth={2} aria-hidden />
-              Tip: Use OR logic for categories. Games that match any selected category will appear.
-            </p>
           </aside>
         )}
-
-        <div className="collection-results">
-          {toolsReady && (
-            <p className="filter-status">
-              Showing {visible.length} of {games.length} {games.length === 1 ? 'game' : 'games'}
-            </p>
-          )}
-
-          {!loading && !error && games.length === 0 && isSupabaseConfigured && (
-            <p className="hint">
-              No games yet.
-              {user ? (
-                <>
-                  {' '}
-                  <Link to="/games/new">Add your first game</Link>.
-                </>
-              ) : (
-                ' Sign in as the owner to add games.'
-              )}
-            </p>
-          )}
-
-          {visible.length > 0 && (
-            <div className="game-groups">
-              {grouped.map(([letter, rows]) => (
-                <section key={letter} className="game-group">
-                  <h2 className="game-letter">{letter}</h2>
-                  <ul className="game-list">
-                    {rows.map((game) => (
-                      <li key={game.id}>
-                        <GameRow game={game} />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          )}
-
-          {!loading && !error && games.length > 0 && visible.length === 0 && (
-            <p className="hint">No games match these filters.</p>
-          )}
-        </div>
       </div>
 
       <dialog
@@ -354,7 +381,7 @@ export function CollectionPage() {
               >
                 View game
               </ButtonLink>
-              <Button variant="secondary" onClick={onRandomPick}>
+              <Button variant="accent" onClick={onRandomPick}>
                 Pick again
               </Button>
               <button
@@ -370,9 +397,4 @@ export function CollectionPage() {
       </dialog>
     </section>
   )
-}
-
-function ownerFirstName(email: string) {
-  const local = email.split('@')[0] ?? email
-  return local.charAt(0).toUpperCase() + local.slice(1)
 }

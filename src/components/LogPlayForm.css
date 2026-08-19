@@ -1,0 +1,159 @@
+.log-play-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.log-play-game {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.log-play-date {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  max-width: 12rem;
+}
+
+.log-play-date input,
+.log-play-name,
+.log-play-score {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.log-play-players {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.log-play-players legend {
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0;
+  margin-bottom: 0.15rem;
+}
+
+.log-play-row {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr) 5.5rem auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.log-play-tie {
+  grid-column: 2 / -1;
+  justify-self: start;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  background: none;
+  color: var(--green);
+  cursor: pointer;
+  padding: 0 0 0.15rem;
+}
+
+.log-play-tie.on {
+  color: var(--green-ink);
+}
+
+.log-play-place {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green-ink);
+}
+
+.log-play-row-actions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.log-play-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.log-play-icon:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.log-play-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.log-play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.log-play-dialog {
+  width: min(calc(100vw - 2rem), 34rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.log-play-dialog::backdrop {
+  background: rgb(45 28 64 / 0.4);
+}
+
+.log-play-dialog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 40rem) {
+  .log-play-row {
+    grid-template-columns: 3.2rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'place name actions'
+      'place score actions'
+      '. tie tie';
+  }
+
+  .log-play-place {
+    grid-area: place;
+  }
+
+  .log-play-name {
+    grid-area: name;
+  }
+
+  .log-play-score {
+    grid-area: score;
+  }
+
+  .log-play-row-actions {
+    grid-area: actions;
+    flex-direction: column;
+  }
+
+  .log-play-tie {
+    grid-area: tie;
+    grid-column: auto;
+  }
+}

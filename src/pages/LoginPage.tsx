@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import './LoginPage.css'
@@ -14,6 +14,7 @@ export function LoginPage() {
     signOut,
   } = useAuth()
   const navigate = useNavigate()
+  const emailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [password, setPassword] = useState('')
@@ -21,12 +22,22 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function onSendLink(event: FormEvent) {
-    event.preventDefault()
+  function emailValue() {
+    return email.trim() || emailRef.current?.value.trim() || ''
+  }
+
+  async function onSendLink() {
+    const address = emailValue()
+    if (!address) {
+      setError('Enter your email, then request a login code.')
+      return
+    }
+
+    setEmail(address)
     setError(null)
     setBusy(true)
     try {
-      await sendLoginEmail(email.trim())
+      await sendLoginEmail(address)
       setSent(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send login email')
@@ -37,10 +48,12 @@ export function LoginPage() {
 
   async function onPasswordSignIn(event: FormEvent) {
     event.preventDefault()
+    const address = emailValue()
+    setEmail(address)
     setError(null)
     setBusy(true)
     try {
-      await signInWithPassword(email.trim(), password)
+      await signInWithPassword(address, password)
       navigate('/games/new')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in')
@@ -54,7 +67,7 @@ export function LoginPage() {
     setError(null)
     setBusy(true)
     try {
-      await verifyOtp(email.trim(), otp.trim())
+      await verifyOtp(emailValue(), otp.trim())
       navigate('/games/new')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid or expired code')
@@ -117,12 +130,14 @@ export function LoginPage() {
         <label>
           Email
           <input
+            ref={emailRef}
             type="email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
               setSent(false)
             }}
+            onInput={(e) => setEmail(e.currentTarget.value)}
             required
             autoComplete="email"
             disabled={busy}
@@ -150,11 +165,16 @@ export function LoginPage() {
         confirmed.
       </p>
 
-      <form className="auth-form" onSubmit={onSendLink}>
-        <button type="submit" disabled={busy || !email.trim()} className="button-secondary">
+      <div className="auth-form">
+        <button
+          type="button"
+          disabled={busy}
+          className="button-secondary"
+          onClick={() => void onSendLink()}
+        >
           {busy && !sent ? 'Sending…' : sent ? 'Resend login email' : 'Email me a login code'}
         </button>
-      </form>
+      </div>
 
       {sent && (
         <>

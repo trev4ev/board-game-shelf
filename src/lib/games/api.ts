@@ -67,12 +67,14 @@ export async function deleteGame(id: string): Promise<void> {
 
 export async function patchGame(
   id: string,
-  patch: Partial<Pick<GameInput, 'notes' | 'isFavorite'>>,
+  patch: Partial<Pick<GameInput, 'notes' | 'isFavorite' | 'playCount' | 'lastPlayed'>>,
 ): Promise<Game> {
   const client = requireClient()
   const row: Record<string, unknown> = {}
   if ('notes' in patch) row.notes = patch.notes
   if ('isFavorite' in patch) row.is_favorite = patch.isFavorite
+  if ('playCount' in patch) row.play_count = patch.playCount
+  if ('lastPlayed' in patch) row.last_played = patch.lastPlayed
 
   const { data, error } = await client
     .from('games')
