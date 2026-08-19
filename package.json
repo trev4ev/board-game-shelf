@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:bgg": "tsx bgg/test-token.ts",
-    "db:setup": "node scripts/print-db-setup.mjs"
+    "db:setup": "node scripts/print-db-setup.mjs",
+    "db:seed": "node scripts/seed-collection.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
