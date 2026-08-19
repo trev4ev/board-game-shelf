@@ -9,6 +9,7 @@ import { RangeSlider } from '../components/RangeSlider'
 import { SearchField } from '../components/SearchField'
 import { Toggle } from '../components/Toggle'
 import {
+  applicableCategories,
   COMPLEXITY_SLIDER_STEP,
   emptyFilters,
   filterGames,
@@ -17,7 +18,7 @@ import {
   formatTimeFilter,
   listGames,
   pickRandomGame,
-  uniqueCategories,
+  visibleCategoryChips,
   PLAYER_SLIDER_MAX,
   PLAYER_SLIDER_MIN,
   TIME_SLIDER_MAX,
@@ -79,10 +80,24 @@ export function CollectionPage() {
   }, [])
 
   const visible = useMemo(() => filterGames(games, filters), [games, filters])
-  const categories = useMemo(() => uniqueCategories(games), [games])
-  const visibleCategories = showAllCategories
-    ? categories
-    : categories.slice(0, CATEGORY_PREVIEW)
+  const categories = useMemo(
+    () => applicableCategories(games, filters),
+    [games, filters],
+  )
+  const visibleCategories = useMemo(
+    () =>
+      visibleCategoryChips(
+        categories,
+        filters.categories,
+        showAllCategories,
+        CATEGORY_PREVIEW,
+      ),
+    [categories, filters.categories, showAllCategories],
+  )
+  const hiddenCategoryCount = categories.length - visibleCategories.length
+  const showCategoryToggle =
+    hiddenCategoryCount > 0 ||
+    (showAllCategories && categories.length > CATEGORY_PREVIEW)
   const filtersOn = filtersAreActive(filters)
   const toolsReady = !loading && !error && isSupabaseConfigured
   const showFilterSheet = toolsReady && (isDesktop || showFilters)
@@ -332,7 +347,7 @@ export function CollectionPage() {
                       {category}
                     </Chip>
                   ))}
-                  {categories.length > CATEGORY_PREVIEW ? (
+                  {showCategoryToggle ? (
                     <button
                       type="button"
                       className="chip more-chip"
@@ -340,7 +355,7 @@ export function CollectionPage() {
                     >
                       {showAllCategories
                         ? 'Less'
-                        : `+ More (${categories.length - CATEGORY_PREVIEW})`}
+                        : `+ More (${hiddenCategoryCount})`}
                     </button>
                   ) : null}
                 </div>

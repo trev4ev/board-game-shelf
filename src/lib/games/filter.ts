@@ -47,6 +47,32 @@ export function uniqueCategories(games: Game[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
+export function applicableCategories(
+  games: Game[],
+  filters: GameFilters,
+): string[] {
+  const matching = filterGames(games, { ...filters, categories: [] })
+  const set = new Set(uniqueCategories(matching))
+  for (const category of filters.categories) {
+    if (category) set.add(category)
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+}
+
+export function visibleCategoryChips(
+  categories: string[],
+  selected: string[],
+  showAll: boolean,
+  previewLimit: number,
+): string[] {
+  if (showAll) return categories
+  const shown = new Set(categories.slice(0, previewLimit))
+  for (const category of selected) {
+    if (category) shown.add(category)
+  }
+  return categories.filter((category) => shown.has(category))
+}
+
 function playMinutes(game: Game): number | null {
   return game.playTime ?? game.maxPlayTime ?? game.minPlayTime
 }
