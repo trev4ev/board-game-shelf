@@ -4,6 +4,7 @@
  */
 export type Game = {
   id: string
+  collectionId: string
   bggId: number | null
   name: string
   yearPublished: number | null
@@ -30,8 +31,8 @@ export type Game = {
   updatedAt: string
 }
 
-/** Fields the owner fills or edits on add/edit forms */
-export type GameInput = Omit<Game, 'id' | 'createdAt' | 'updatedAt'>
+/** Fields filled on add/edit forms (collection comes from the current shelf) */
+export type GameInput = Omit<Game, 'id' | 'collectionId' | 'createdAt' | 'updatedAt'>
 
 export type GameFilters = {
   nameQuery: string

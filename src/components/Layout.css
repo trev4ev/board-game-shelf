@@ -87,6 +87,56 @@
   color: var(--accent);
 }
 
+.header-nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.header-nav-link:hover,
+.header-nav-link.active {
+  color: var(--accent);
+}
+
+.header-badge {
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--green);
+  color: #f7faf5;
+  font-size: 0.7rem;
+  display: inline-grid;
+  place-items: center;
+}
+
+.invite-banners {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 1.5rem;
+  background: var(--green-soft);
+  border-bottom: 1px solid var(--border);
+}
+
+.invite-banner {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.invite-banner-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .add-game-btn {
   min-height: 2.45rem;
   padding: 0.45rem 0.85rem;

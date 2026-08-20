@@ -7,7 +7,9 @@ game night, and pick something to play — manually or at random.
 
 Core functionality
 ------------------
-- Add, edit, and remove games from your collection
+- Create an account (Google, or email) and choose a username
+- Create collections; invite other users as equal co-owners
+- Add, edit, and remove games from a collection you co-own
 - Store game details aligned with BoardGameGeek fields (players, play
   time, categories, mechanics, complexity 1–5, images, etc.) plus collection
   fields (favorites, last played, play count, notes)
@@ -16,9 +18,10 @@ Core functionality
   favorites, and other stored fields
 - Browse the filtered list and select a game
 - Randomly pick a game from the current (filtered) results
-- Guest (view-only) vs owner (edit) access
+- Add friends by username; tag friends or co-owners when logging a play
+- Guest names (no account) can still be recorded on a play
+- Anyone with a collection URL can browse, filter, and random-pick
 - Mobile-friendly layout for use at the table
-- Share or allow others to browse and filter the collection
 
 BoardGameGeek prefill (after API token is approved)
 ---------------------------------------------------

@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useCollections } from '../auth/CollectionProvider'
 import { GameForm } from '../components/GameForm'
+import { isAcceptedMember } from '../lib/collections'
 import { deleteGame, getGame, gameToInput, replaceGame } from '../lib/games'
 import type { GameInput } from '../types/game'
 import './EditGamePage.css'
 
 export function EditGamePage() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { memberships, setActiveCollectionId } = useCollections()
   const navigate = useNavigate()
   const [form, setForm] = useState<GameInput | null>(null)
   const [name, setName] = useState('')
+  const [collectionId, setCollectionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -29,6 +31,8 @@ export function EditGamePage() {
         } else {
           setForm(gameToInput(row))
           setName(row.name)
+          setCollectionId(row.collectionId)
+          setActiveCollectionId(row.collectionId)
           setError(null)
         }
       })
@@ -43,7 +47,7 @@ export function EditGamePage() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, setActiveCollectionId])
 
   async function onSave() {
     if (!id || !form) return
@@ -68,12 +72,14 @@ export function EditGamePage() {
     setError(null)
     try {
       await deleteGame(id)
-      navigate('/')
+      navigate(collectionId ? `/c/${collectionId}` : '/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed')
       setDeleting(false)
     }
   }
+
+  const canEdit = Boolean(collectionId && isAcceptedMember(memberships, collectionId))
 
   if (loading) {
     return (
@@ -84,11 +90,11 @@ export function EditGamePage() {
     )
   }
 
-  if (!user) {
+  if (!canEdit) {
     return (
       <section>
         <h1>Edit game</h1>
-        <p className="lede">Only the owner can edit or delete games.</p>
+        <p className="lede">Only collection members can edit or delete games.</p>
         <p className="hint">
           <Link to="/login">Sign in</Link>
           {' · '}
@@ -103,7 +109,7 @@ export function EditGamePage() {
       <section>
         <h1>Edit game</h1>
         <p className="error">{error}</p>
-        <Link to="/">Back to collection</Link>
+        <Link to={collectionId ? `/c/${collectionId}` : '/'}>Back to collection</Link>
       </section>
     )
   }

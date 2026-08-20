@@ -2,28 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { Menu, Plus, X } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { CollectionProvider, useCollections } from '../auth/CollectionProvider'
 import { isBggLookupEnabled } from '../lib/gameLookup'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Brand } from './Brand'
-import { ButtonLink } from './Button'
+import { Button, ButtonLink } from './Button'
 import './Layout.css'
 
-function ownerLabel(email: string | undefined) {
-  if (!email) return 'Owner'
-  const local = email.split('@')[0] ?? email
-  return local.charAt(0).toUpperCase() + local.slice(1)
+function initials(label: string | undefined) {
+  if (!label) return '?'
+  return label.charAt(0).toUpperCase()
 }
 
-function initials(email: string | undefined) {
-  if (!email) return '?'
-  return email.charAt(0).toUpperCase()
-}
-
-export function Layout() {
-  const { user } = useAuth()
+function HeaderNav() {
+  const { user, profile } = useAuth()
+  const { currentCollectionId, isMember, pendingInvites, acceptInvite, declineInvite } =
+    useCollections()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const displayName = profile?.username ?? user?.email ?? 'Account'
+  const addGameTo = currentCollectionId && isMember ? `/c/${currentCollectionId}/games/new` : null
 
   useEffect(() => {
     setMenuOpen(false)
@@ -43,7 +42,7 @@ export function Layout() {
   }, [menuOpen])
 
   return (
-    <div className="app-shell">
+    <>
       <header className="app-header">
         <Brand />
         <div
@@ -66,22 +65,32 @@ export function Layout() {
           </button>
           <div id="header-menu" className="app-header-menu">
             {user ? (
-              <NavLink to="/login" className="owner-chip">
-                <span className="owner-avatar" aria-hidden>
-                  {initials(user.email)}
-                </span>
-                <span className="owner-meta">
-                  <span className="owner-name">{ownerLabel(user.email)}</span>
-                  <span className="owner-role">Owner</span>
-                </span>
-              </NavLink>
+              <>
+                <NavLink to="/" className="header-nav-link">
+                  Collections
+                </NavLink>
+                <NavLink to="/friends" className="header-nav-link">
+                  Friends
+                </NavLink>
+                <NavLink to="/login" className="owner-chip">
+                  <span className="owner-avatar" aria-hidden>
+                    {initials(profile?.username ?? user.email)}
+                  </span>
+                  <span className="owner-meta">
+                    <span className="owner-name">{displayName}</span>
+                    <span className="owner-role">
+                      {profile?.username ? 'Signed in' : 'Finish setup'}
+                    </span>
+                  </span>
+                </NavLink>
+              </>
             ) : (
               <NavLink to="/login" className="owner-login">
-                Owner login
+                Sign in
               </NavLink>
             )}
-            {user && (
-              <ButtonLink to="/games/new" variant="outline" className="add-game-btn">
+            {addGameTo && (
+              <ButtonLink to={addGameTo} variant="outline" className="add-game-btn">
                 <Plus size={16} strokeWidth={2.25} aria-hidden />
                 Add game
               </ButtonLink>
@@ -89,27 +98,60 @@ export function Layout() {
           </div>
         </div>
       </header>
-
-      {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
-        <aside className="dev-banners" aria-label="Setup status">
-          {!isSupabaseConfigured && (
-            <p className="banner">
-              Supabase env not set — copy <code>.env.example</code> to{' '}
-              <code>.env</code> when ready.
+      {pendingInvites.length > 0 && (
+        <aside className="invite-banners" aria-label="Collection invites">
+          {pendingInvites.map((invite) => (
+            <p key={invite.collection.id} className="invite-banner">
+              Invited to <strong>{invite.collection.name}</strong>
+              <span className="invite-banner-actions">
+                <Button
+                  variant="accent"
+                  onClick={() => void acceptInvite(invite.collection.id)}
+                >
+                  Accept
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => void declineInvite(invite.collection.id)}
+                >
+                  Decline
+                </Button>
+              </span>
             </p>
-          )}
-          {import.meta.env.DEV && !isBggLookupEnabled && (
-            <p className="banner muted">
-              BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
-              for local search via the Vite proxy.
-            </p>
-          )}
+          ))}
         </aside>
       )}
+    </>
+  )
+}
 
-      <main className="app-main">
-        <Outlet />
-      </main>
-    </div>
+export function Layout() {
+  return (
+    <CollectionProvider>
+      <div className="app-shell">
+        <HeaderNav />
+
+        {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
+          <aside className="dev-banners" aria-label="Setup status">
+            {!isSupabaseConfigured && (
+              <p className="banner">
+                Supabase env not set — copy <code>.env.example</code> to{' '}
+                <code>.env</code> when ready.
+              </p>
+            )}
+            {import.meta.env.DEV && !isBggLookupEnabled && (
+              <p className="banner muted">
+                BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
+                for local search via the Vite proxy.
+              </p>
+            )}
+          </aside>
+        )}
+
+        <main className="app-main">
+          <Outlet />
+        </main>
+      </div>
+    </CollectionProvider>
   )
 }

@@ -116,6 +116,13 @@
   color: var(--text-muted);
 }
 
+.play-history-tag {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
 .game-catalog {
   margin-top: 1.75rem;
   border: 1px solid var(--border);

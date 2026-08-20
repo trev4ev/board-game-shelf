@@ -11,11 +11,12 @@ function requireClient() {
   return supabase
 }
 
-export async function listGames(): Promise<Game[]> {
+export async function listGames(collectionId: string): Promise<Game[]> {
   const client = requireClient()
   const { data, error } = await client
     .from('games')
     .select('*')
+    .eq('collection_id', collectionId)
     .order('name', { ascending: true })
 
   if (error) throw error
@@ -34,11 +35,14 @@ export async function getGame(id: string): Promise<Game | null> {
   return data ? rowToGame(data as GameRow) : null
 }
 
-export async function createGame(input: GameInput): Promise<Game> {
+export async function createGame(
+  collectionId: string,
+  input: GameInput,
+): Promise<Game> {
   const client = requireClient()
   const { data, error } = await client
     .from('games')
-    .insert(gameInputToRow(input))
+    .insert({ ...gameInputToRow(input), collection_id: collectionId })
     .select('*')
     .single()
 

@@ -1,11 +1,12 @@
 import { Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useCollections } from '../auth/CollectionProvider'
 import { Button } from '../components/Button'
 import { LogPlayForm } from '../components/LogPlayForm'
 import { Toggle } from '../components/Toggle'
 import { complexityFieldLabel, formatComplexity } from '../lib/complexity'
+import { isAcceptedMember } from '../lib/collections'
 import { createPlay, formatLastPlayed, formatPlace, getGame, listPlays, patchGame } from '../lib/games'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import type { Game } from '../types/game'
@@ -14,7 +15,7 @@ import './GameDetailPage.css'
 
 export function GameDetailPage() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { memberships, setActiveCollectionId } = useCollections()
   const navigate = useNavigate()
   const isDesktop = useMediaQuery('(min-width: 48rem)')
   const [game, setGame] = useState<Game | null>(null)
@@ -27,6 +28,8 @@ export function GameDetailPage() {
   const [formKey, setFormKey] = useState(0)
   const [plays, setPlays] = useState<Play[]>([])
   const playDialogRef = useRef<HTMLDialogElement>(null)
+
+  const canEdit = Boolean(game && isAcceptedMember(memberships, game.collectionId))
 
   useEffect(() => {
     if (!id) return
@@ -60,11 +63,17 @@ export function GameDetailPage() {
     }
   }, [id])
 
+  useEffect(() => {
+    if (!game) return
+    setActiveCollectionId(game.collectionId)
+    return () => setActiveCollectionId(null)
+  }, [game, setActiveCollectionId])
+
   async function saveShelf(
     patch: { notes?: string | null; isFavorite?: boolean; playCount?: number; lastPlayed?: string | null },
     hint = 'Saved',
   ) {
-    if (!id || !user) return
+    if (!id || !canEdit) return
     setSaving(true)
     setSaveHint(null)
     setError(null)
@@ -133,8 +142,8 @@ export function GameDetailPage() {
   return (
     <section className="game-detail">
       <p className="hint">
-        <Link to="/">← Collection</Link>
-        {user && (
+        <Link to={`/c/${game.collectionId}`}>← Collection</Link>
+        {canEdit && (
           <>
             {' · '}
             <Link to={`/games/${game.id}/edit`}>Edit catalog</Link>
@@ -162,7 +171,7 @@ export function GameDetailPage() {
       )}
 
       <div className="shelf-fields">
-        {user ? (
+        {canEdit ? (
           <>
             <div className="game-actions">
               <Toggle
@@ -223,7 +232,12 @@ export function GameDetailPage() {
                           {formatPlace(player.place)}
                           {tied ? ' (tie)' : ''}
                         </span>
-                        <span className="play-history-name">{player.name}</span>
+                        <span className="play-history-name">
+                          {player.name}
+                          {player.userId ? (
+                            <span className="play-history-tag"> tagged</span>
+                          ) : null}
+                        </span>
                         {player.score != null ? (
                           <span className="play-history-score">{player.score}</span>
                         ) : null}
@@ -300,9 +314,10 @@ export function GameDetailPage() {
 
       <dialog ref={playDialogRef} className="log-play-dialog">
         <h2>Log play</h2>
-        <LogPlayForm
+          <LogPlayForm
           key={formKey}
           gameId={game.id}
+          collectionId={game.collectionId}
           gameName={game.name}
           busy={saving}
           error={playError}

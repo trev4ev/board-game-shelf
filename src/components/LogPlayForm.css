@@ -29,6 +29,78 @@
   color: var(--text);
 }
 
+.log-play-name {
+  width: 100%;
+}
+
+.log-play-name-wrap {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.log-play-suggest {
+  position: absolute;
+  top: calc(100% - 0.15rem);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.log-play-suggest button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.log-play-suggest button:hover {
+  background: var(--accent-soft);
+}
+
+.log-play-suggest span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.log-play-tagged {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.log-play-tagged.guest {
+  color: var(--text-muted);
+}
+
+.log-play-people-hint {
+  margin: 0 0 0.25rem;
+}
+  font: inherit;
+  font-weight: 400;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .log-play-players {
   margin: 0;
   padding: 0;
@@ -139,7 +211,7 @@
     grid-area: place;
   }
 
-  .log-play-name {
+  .log-play-name-wrap {
     grid-area: name;
   }
 

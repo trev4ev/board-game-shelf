@@ -53,8 +53,29 @@
 }
 
 .collection-hero {
-  display: grid;
-  gap: 0.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.collection-hero h1 {
+  margin-bottom: 0;
+}
+
+.collection-settings-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.collection-settings-link:hover {
+  color: var(--accent);
 }
 
 .collection-search-row {

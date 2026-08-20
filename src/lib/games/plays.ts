@@ -23,12 +23,24 @@ function asPlayers(value: unknown): PlayPlayer[] {
   const players: PlayPlayer[] = []
   for (const item of value) {
     if (!item || typeof item !== 'object') continue
-    const row = item as { name?: unknown; place?: unknown; score?: unknown }
+    const row = item as {
+      name?: unknown
+      place?: unknown
+      score?: unknown
+      userId?: unknown
+      user_id?: unknown
+    }
     if (typeof row.name !== 'string' || !row.name.trim()) continue
     const place = typeof row.place === 'number' && Number.isFinite(row.place) ? row.place : players.length + 1
     const score =
       typeof row.score === 'number' && Number.isFinite(row.score) ? row.score : null
-    players.push({ name: row.name.trim(), place, score })
+    const tagged =
+      typeof row.userId === 'string'
+        ? row.userId
+        : typeof row.user_id === 'string'
+          ? row.user_id
+          : null
+    players.push({ name: row.name.trim(), place, score, userId: tagged })
   }
   return players
 }
