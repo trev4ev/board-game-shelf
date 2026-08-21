@@ -1,0 +1,17 @@
+# Trigger staging Pages deploy
+
+# GitHub Pages can only deploy from `main` (environment branch policy).
+# This no-op workflow runs on staging pushes so the Pages workflow on
+# `main` can subscribe via `workflow_run` and republish both sites.
+
+name: Trigger staging Pages deploy
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "staging updated"
