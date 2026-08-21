@@ -158,6 +158,15 @@
   gap: 0.4rem;
 }
 
+.staging-banner {
+  margin: 0;
+  padding: 0.45rem 1.5rem;
+  background: #efe3c9;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .dev-banners {
   display: grid;
   gap: 0.35rem;

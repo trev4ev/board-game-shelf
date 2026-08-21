@@ -2,7 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 permissions:
@@ -14,27 +14,92 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  PROD_BASE: /board-game-shelf/
+  STAGING_BASE: /board-game-shelf/staging/
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main (production)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: prod-src
+
+      - name: Checkout staging
+        id: staging-checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+          path: staging-src
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache-dependency-path: prod-src/package-lock.json
+
+      - name: Build production
+        working-directory: prod-src
+        run: |
+          npm ci
+          npm run build
         env:
-          VITE_BASE_PATH: /board-game-shelf/
+          VITE_BASE_PATH: ${{ env.PROD_BASE }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_BGG_LOOKUP_ENABLED: true
-      - name: SPA fallback
-        run: cp dist/index.html dist/404.html
+
+      - name: Build staging
+        if: steps.staging-checkout.outcome == 'success'
+        working-directory: staging-src
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_BASE_PATH: ${{ env.STAGING_BASE }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_BGG_LOOKUP_ENABLED: true
+
+      - name: Compose production and staging site
+        run: |
+          set -euo pipefail
+
+          inject() {
+            if [ -f staging-src/.github/scripts/inject-spa-restore.py ]; then
+              python3 staging-src/.github/scripts/inject-spa-restore.py "$1"
+            elif [ -f prod-src/.github/scripts/inject-spa-restore.py ]; then
+              python3 prod-src/.github/scripts/inject-spa-restore.py "$1"
+            fi
+          }
+
+          mkdir -p site
+          cp -a prod-src/dist/. site/
+          inject site/index.html
+
+          if [ -f staging-src/.github/pages-404.html ]; then
+            cp staging-src/.github/pages-404.html site/404.html
+          elif [ -f prod-src/.github/pages-404.html ]; then
+            cp prod-src/.github/pages-404.html site/404.html
+          else
+            cp site/index.html site/404.html
+          fi
+          touch site/.nojekyll
+
+          if [ -d staging-src/dist ]; then
+            rm -rf site/staging
+            mkdir -p site/staging
+            cp -a staging-src/dist/. site/staging/
+            inject site/staging/index.html
+          fi
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build
@@ -69,6 +134,7 @@ jobs:
             const body = [
               `The [Deploy GitHub Pages](${runUrl}) workflow failed on \`${sha}\`.`,
               '',
+              `- Branch: ${context.ref}`,
               `- Commit: ${context.sha}`,
               `- Actor: @${context.actor}`,
               `- Jobs: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`,
