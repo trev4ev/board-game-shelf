@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { CollectionProvider, useCollections } from '../auth/CollectionProvider'
 import { isBggLookupEnabled } from '../lib/gameLookup'
+import { isStagingDeploy } from '../lib/deployEnv'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Brand } from './Brand'
 import { Button } from './Button'
@@ -155,6 +156,13 @@ export function Layout() {
     <CollectionProvider>
       <div className="app-shell">
         <HeaderNav />
+
+        {isStagingDeploy() && (
+          <p className="staging-banner">
+            Staging — same Supabase data as production. Pushes to the{' '}
+            <code>staging</code> branch update this copy.
+          </p>
+        )}
 
         {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
           <aside className="dev-banners" aria-label="Setup status">

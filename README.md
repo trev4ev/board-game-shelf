@@ -29,10 +29,21 @@ Vite proxy (`/api/bgg`). The token stays on the Vite server.
 - `npm run preview` — preview production build
 - `npm run test:bgg` — check `BGG_API_TOKEN` against xmlapi2
 
-## Production
+## Production and staging
 
-GitHub Actions builds on `main` and deploys to Pages
-(`https://trev4ev.github.io/board-game-shelf/` or the repo’s Pages custom domain).
+GitHub Actions builds **both** sites whenever `main` or `staging` is pushed,
+then publishes one Pages artifact:
+
+- Production (`main`): https://trevoraquino.me/board-game-shelf/  
+  (also https://trev4ev.github.io/board-game-shelf/)
+- Staging (`staging` branch): https://trevoraquino.me/board-game-shelf/staging/
+
+Staging uses the same Supabase project as production. Add these Redirect URLs
+in Authentication → URL Configuration before signing in on staging:
+
+- `https://trevoraquino.me/board-game-shelf/staging/login`
+- `https://trev4ev.github.io/board-game-shelf/staging/login`
+
 A failed deploy opens or comments on a `deploy-failure` GitHub issue (assigned to
 the repo owner), which emails you if Issues notifications are on.
 
@@ -57,7 +68,11 @@ In the Supabase dashboard:
    Web client ID and secret. Authorized redirect URI:
    `https://<project-ref>.supabase.co/auth/v1/callback`
 2. Authentication → URL Configuration → Redirect URLs: add the local origin
-   `/login` and the GitHub Pages `/login` (and the site origin).
+   `/login`, production Pages `/login`, and staging Pages `/login`:
+   `https://trevoraquino.me/board-game-shelf/login`,
+   `https://trevoraquino.me/board-game-shelf/staging/login`,
+   `https://trev4ev.github.io/board-game-shelf/login`,
+   `https://trev4ev.github.io/board-game-shelf/staging/login`.
 3. Run SQL in `supabase/migrations/` if the remote schema is behind the repo
    (`20260821_protect_collection_creator.sql` stops co-owners from removing
    the original collection creator).
