@@ -9,7 +9,8 @@ Core functionality
 ------------------
 - Create an account (Google, or email) and choose a username
 - Create collections; invite other users as co-owners (the original
-  creator cannot be removed by others)
+  creator cannot be removed by others). Share an invite link, or add
+  someone by username
 - Add, edit, and remove games from a collection you co-own
 - Store game details aligned with BoardGameGeek fields (players, play
   time, categories, mechanics, complexity 1–5, images, etc.) plus collection

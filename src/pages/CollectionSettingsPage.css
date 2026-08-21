@@ -83,6 +83,8 @@
   border-color: #c5d4bf;
 }
 
-.settings-form.danger {
-  border-color: #e3c4c4;
+.invite-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

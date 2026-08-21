@@ -13,6 +13,7 @@ import { FriendsPage } from './pages/FriendsPage'
 import { GameDetailPage } from './pages/GameDetailPage'
 import { GamesNewRedirect } from './pages/GamesNewRedirect'
 import { HomePage } from './pages/HomePage'
+import { InvitePage } from './pages/InvitePage'
 import { LoginPage } from './pages/LoginPage'
 import { LogPlayPage } from './pages/LogPlayPage'
 import { OnboardingPage } from './pages/OnboardingPage'
@@ -25,6 +26,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="onboarding" element={<OnboardingPage />} />
+            <Route path="invite/:token" element={<InvitePage />} />
             <Route element={<RequireUsername />}>
               <Route index element={<HomePage />} />
               <Route path="friends" element={<FriendsPage />} />

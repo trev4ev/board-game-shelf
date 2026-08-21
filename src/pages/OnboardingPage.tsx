@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button } from '../components/Button'
 import { ensureDefaultCollection } from '../lib/collections'
+import { nextPathAfterAuth, peekPendingInvite } from '../lib/pendingInvite'
 import { setUsername } from '../lib/profiles'
 import { USERNAME_MAX, usernameError } from '../lib/username'
 import './LoginPage.css'
@@ -27,11 +28,12 @@ export function OnboardingPage() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    const invite = peekPendingInvite()
+    return <Navigate to={invite ? `/login?invite=${invite}` : '/login'} replace />
   }
 
   if (!needsUsername && profile?.username) {
-    return <Navigate to="/" replace />
+    return <Navigate to={nextPathAfterAuth(false)} replace />
   }
 
   async function onSubmit(event: FormEvent) {
@@ -48,10 +50,12 @@ export function OnboardingPage() {
       const next = await setUsername(user.id, username)
       await refreshProfile()
       if (next.username) {
-        await ensureDefaultCollection(user.id, next.username)
+        if (!peekPendingInvite()) {
+          await ensureDefaultCollection(user.id, next.username)
+        }
         await refresh()
       }
-      navigate('/')
+      navigate(nextPathAfterAuth(false))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save username')
     } finally {
@@ -65,6 +69,9 @@ export function OnboardingPage() {
       <p className="lede">
         Friends and co-owners will find you by this name. You can still log
         plays with guest names that have no account.
+        {peekPendingInvite()
+          ? ' After this, you will join the collection you were invited to.'
+          : ''}
       </p>
       <form className="auth-form" onSubmit={onSubmit}>
         <label>

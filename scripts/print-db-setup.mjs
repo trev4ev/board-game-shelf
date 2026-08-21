@@ -9,6 +9,7 @@ Board Game Shelf — database setup
    supabase/migrations/20260819_create_plays.sql
    supabase/migrations/20260820_accounts_collections.sql
    supabase/migrations/20260821_protect_collection_creator.sql
+   supabase/migrations/20260822_collection_invite_links.sql
 
 3. Authentication → Providers:
    - Enable Email

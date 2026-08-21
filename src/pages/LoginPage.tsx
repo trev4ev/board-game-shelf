@@ -1,7 +1,8 @@
-import { useRef, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Button } from '../components/Button'
+import { nextPathAfterAuth, peekPendingInvite, rememberPendingInvite } from '../lib/pendingInvite'
 import './LoginPage.css'
 
 function GoogleMark() {
@@ -32,6 +33,8 @@ export function LoginPage() {
     user,
     profile,
     loading,
+    profileLoading,
+    needsUsername,
     isConfigured,
     sendLoginEmail,
     verifyOtp,
@@ -39,12 +42,25 @@ export function LoginPage() {
     signOut,
   } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const emailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const joiningInvite = Boolean(searchParams.get('invite') || peekPendingInvite())
+
+  useEffect(() => {
+    const token = searchParams.get('invite')
+    if (token) rememberPendingInvite(token)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!user || loading || profileLoading) return
+    if (!peekPendingInvite()) return
+    navigate(nextPathAfterAuth(needsUsername), { replace: true })
+  }, [loading, navigate, needsUsername, profileLoading, user])
 
   function emailValue() {
     return email.trim() || emailRef.current?.value.trim() || ''
@@ -77,7 +93,7 @@ export function LoginPage() {
     setBusy(true)
     try {
       await verifyOtp(emailValue(), otp.trim())
-      navigate('/')
+      navigate(nextPathAfterAuth(needsUsername))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid or expired code')
     } finally {
@@ -132,8 +148,12 @@ export function LoginPage() {
           )}
         </p>
         <div className="auth-actions">
-          <Link to={profile?.username ? '/' : '/onboarding'} className="button-link">
-            {profile?.username ? 'Your collections' : 'Choose a username'}
+          <Link to={nextPathAfterAuth(needsUsername)} className="button-link">
+            {needsUsername
+              ? 'Choose a username'
+              : joiningInvite
+                ? 'Join collection'
+                : 'Your collections'}
           </Link>
           <button
             type="button"
@@ -151,8 +171,10 @@ export function LoginPage() {
     <section>
       <h1>Sign in</h1>
       <p className="lede">
-        Create an account or sign in to manage your collections, invite
-        co-owners, and tag friends on plays.
+        Create an account or sign in to{' '}
+        {joiningInvite
+          ? 'join this collection.'
+          : 'manage your collections, invite co-owners, and tag friends on plays.'}
       </p>
 
       <form className="auth-form" onSubmit={(event) => void onSendLink(event)}>

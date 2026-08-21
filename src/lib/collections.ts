@@ -292,3 +292,90 @@ export function isAcceptedMember(
     (item) => item.collection.id === collectionId && item.status === 'accepted',
   )
 }
+
+export type CollectionInvitePreview = {
+  collectionId: string
+  name: string
+}
+
+function asInvitePreview(data: unknown): CollectionInvitePreview | null {
+  let value = data
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value) as unknown
+    } catch {
+      return null
+    }
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const row = value as Record<string, unknown>
+  const collectionId =
+    typeof row.collectionId === 'string'
+      ? row.collectionId
+      : typeof row.collection_id === 'string'
+        ? row.collection_id
+        : null
+  const name = typeof row.name === 'string' ? row.name : null
+  if (!collectionId || !name) return null
+  return { collectionId, name }
+}
+
+export async function lookupCollectionInvite(
+  token: string,
+): Promise<CollectionInvitePreview | null> {
+  const client = requireClient()
+  const { data, error } = await client.rpc('lookup_collection_invite', {
+    invite_token: token,
+  })
+  if (error) throw error
+  return asInvitePreview(data)
+}
+
+export async function joinCollectionByInvite(token: string): Promise<string> {
+  const client = requireClient()
+  const { data, error } = await client.rpc('join_collection_by_invite', {
+    invite_token: token,
+  })
+  if (error) {
+    const message = error.message.toLowerCase()
+    if (error.code === 'P0003' || message.includes('username')) {
+      throw new Error('Choose a username first.')
+    }
+    if (error.code === 'P0004' || message.includes('invalid invite')) {
+      throw new Error('This invite link is invalid or has been replaced.')
+    }
+    throw error
+  }
+  if (typeof data !== 'string' || !data) {
+    throw new Error('This invite link is invalid or has been replaced.')
+  }
+  return data
+}
+
+export async function getCollectionInviteToken(
+  collectionId: string,
+): Promise<string | null> {
+  const client = requireClient()
+  const { data, error } = await client
+    .from('collection_invite_links')
+    .select('token')
+    .eq('collection_id', collectionId)
+    .maybeSingle()
+  if (error) throw error
+  const token = (data as { token?: unknown } | null)?.token
+  return typeof token === 'string' ? token : null
+}
+
+export async function regenerateCollectionInvite(
+  collectionId: string,
+): Promise<string> {
+  const client = requireClient()
+  const { data, error } = await client.rpc('regenerate_collection_invite', {
+    cid: collectionId,
+  })
+  if (error) throw error
+  if (typeof data !== 'string' || !data) {
+    throw new Error('Could not create an invite link.')
+  }
+  return data
+}

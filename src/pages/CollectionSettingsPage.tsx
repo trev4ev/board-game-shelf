@@ -7,12 +7,15 @@ import {
   canRemoveCollectionMember,
   deleteCollection,
   getCollection,
+  getCollectionInviteToken,
   inviteCollectionMember,
   isCollectionCreator,
   listCollectionMembers,
+  regenerateCollectionInvite,
   removeCollectionMember,
   renameCollection,
 } from '../lib/collections'
+import { appUrl } from '../lib/appUrl'
 import { usernameSearchMessage, useUsernameSearch } from '../lib/useUsernameSearch'
 import type { Collection, CollectionMember } from '../types/collection'
 import './CollectionSettingsPage.css'
@@ -26,6 +29,7 @@ export function CollectionSettingsPage() {
   const [members, setMembers] = useState<CollectionMember[]>([])
   const [name, setName] = useState('')
   const [invite, setInvite] = useState('')
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,12 +43,14 @@ export function CollectionSettingsPage() {
     Promise.all([
       getCollection(collectionId),
       listCollectionMembers(collectionId).catch(() => [] as CollectionMember[]),
+      getCollectionInviteToken(collectionId).catch(() => null),
     ])
-      .then(([shelf, roster]) => {
+      .then(([shelf, roster, token]) => {
         if (cancelled) return
         setCollection(shelf)
         setName(shelf?.name ?? '')
         setMembers(roster)
+        setInviteToken(token)
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load')
@@ -78,6 +84,41 @@ export function CollectionSettingsPage() {
     if (!collectionId) return
     const roster = await listCollectionMembers(collectionId)
     setMembers(roster)
+  }
+
+  async function onCopyInviteLink() {
+    if (!inviteToken) return
+    const url = appUrl(`invite/${inviteToken}`)
+    try {
+      await navigator.clipboard.writeText(url)
+      setHint('Invite link copied')
+      setError(null)
+    } catch {
+      setError('Could not copy. Select the link and copy it yourself.')
+    }
+  }
+
+  async function onRegenerateInviteLink() {
+    if (!collectionId) return
+    if (
+      inviteToken &&
+      !window.confirm(
+        'Replace the invite link? The old link will stop working.',
+      )
+    ) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const token = await regenerateCollectionInvite(collectionId)
+      setInviteToken(token)
+      setHint('New invite link created')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not replace invite link')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function onInvite(event: FormEvent) {
@@ -208,12 +249,59 @@ export function CollectionSettingsPage() {
         </Button>
       </form>
 
-      <form className="settings-form" onSubmit={(event) => void onInvite(event)}>
-        <h2>Invite a co-owner</h2>
+      <div className="settings-form">
+        <h2>Invite link</h2>
         <p className="hint">
+          Anyone with this link can join as a co-owner after they sign in. New
+          users will create an account, choose a username, and then be added.
+        </p>
+        {inviteToken ? (
+          <>
+            <label>
+              Link
+              <input
+                value={appUrl(`invite/${inviteToken}`)}
+                readOnly
+                onFocus={(event) => event.currentTarget.select()}
+              />
+            </label>
+            <div className="invite-link-actions">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => void onCopyInviteLink()}
+                disabled={busy}
+              >
+                Copy link
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => void onRegenerateInviteLink()}
+                disabled={busy}
+              >
+                Replace link
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => void onRegenerateInviteLink()}
+            disabled={busy}
+          >
+            Create invite link
+          </Button>
+        )}
+      </div>
+
+      <form className="settings-form" onSubmit={(event) => void onInvite(event)}>
+        <h2>Invite by username</h2>
+        <p className="hint">
+          If they already have an account, you can add them by username.
           Co-owners can add games, log plays, and invite others. They cannot
-          remove the original collection creator. Invitees need an account
-          and username.
+          remove the original collection creator.
         </p>
         <label>
           Username
