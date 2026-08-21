@@ -159,8 +159,8 @@ export function Layout() {
 
         {isStagingDeploy() && (
           <p className="staging-banner">
-            Staging — same Supabase data as production. This copy is the
-            <code>staging</code> branch; it publishes when <code>main</code> deploys.
+            Staging — same Supabase data as production. This is the
+            <code>staging</code> branch.
           </p>
         )}
 

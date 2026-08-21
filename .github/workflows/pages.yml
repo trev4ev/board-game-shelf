@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Trigger staging Pages deploy"]
+    types: [completed]
+    branches: [staging]
 
 permissions:
   contents: read
@@ -20,7 +24,7 @@ env:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main (production)
@@ -103,7 +107,7 @@ jobs:
           path: site
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     needs: build
     runs-on: ubuntu-latest
     environment:
