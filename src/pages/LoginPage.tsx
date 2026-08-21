@@ -35,7 +35,6 @@ export function LoginPage() {
     isConfigured,
     sendLoginEmail,
     verifyOtp,
-    signInWithPassword,
     signInWithGoogle,
     signOut,
   } = useAuth()
@@ -43,7 +42,6 @@ export function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
-  const [password, setPassword] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -52,7 +50,8 @@ export function LoginPage() {
     return email.trim() || emailRef.current?.value.trim() || ''
   }
 
-  async function onSendLink() {
+  async function onSendLink(event: FormEvent) {
+    event.preventDefault()
     const address = emailValue()
     if (!address) {
       setError('Enter your email, then request a login code.')
@@ -67,22 +66,6 @@ export function LoginPage() {
       setSent(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send login email')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function onPasswordSignIn(event: FormEvent) {
-    event.preventDefault()
-    const address = emailValue()
-    setEmail(address)
-    setError(null)
-    setBusy(true)
-    try {
-      await signInWithPassword(address, password)
-      navigate('/')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign in')
     } finally {
       setBusy(false)
     }
@@ -172,16 +155,7 @@ export function LoginPage() {
         co-owners, and tag friends on plays.
       </p>
 
-      <div className="auth-form">
-        <Button variant="primary" onClick={() => void onGoogle()} disabled={busy}>
-          <GoogleMark />
-          Continue with Google
-        </Button>
-      </div>
-
-      <p className="hint auth-divider">or use email</p>
-
-      <form className="auth-form" onSubmit={onPasswordSignIn}>
+      <form className="auth-form" onSubmit={(event) => void onSendLink(event)}>
         <label>
           Email
           <input
@@ -198,39 +172,17 @@ export function LoginPage() {
             disabled={busy}
           />
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            disabled={busy}
-          />
-        </label>
-        <button type="submit" className="btn btn-primary" disabled={busy || !password}>
-          {busy ? 'Please wait…' : 'Sign in with password'}
-        </button>
+        <Button type="submit" variant="primary" disabled={busy}>
+          {busy && !sent ? 'Sending…' : sent ? 'Resend magic code' : 'Send me magic code'}
+        </Button>
       </form>
-
-      <div className="auth-form">
-        <button
-          type="button"
-          disabled={busy}
-          className="button-secondary"
-          onClick={() => void onSendLink()}
-        >
-          {busy && !sent ? 'Sending…' : sent ? 'Resend login email' : 'Email me a login code'}
-        </button>
-      </div>
 
       {sent && (
         <>
           <p className="hint">
             Check your inbox. Click the link, or paste the 6-digit code here.
           </p>
-          <form className="auth-form" onSubmit={onVerifyOtp}>
+          <form className="auth-form" onSubmit={(event) => void onVerifyOtp(event)}>
             <label>
               One-time code
               <input
@@ -243,12 +195,21 @@ export function LoginPage() {
                 placeholder="123456"
               />
             </label>
-            <button type="submit" className="btn btn-primary" disabled={busy}>
+            <Button type="submit" variant="primary" disabled={busy}>
               {busy ? 'Verifying…' : 'Verify code'}
-            </button>
+            </Button>
           </form>
         </>
       )}
+
+      <p className="hint auth-divider">or</p>
+
+      <div className="auth-form">
+        <Button variant="outline" onClick={() => void onGoogle()} disabled={busy}>
+          <GoogleMark />
+          Continue with Google
+        </Button>
+      </div>
 
       {error && <p className="error">{error}</p>}
     </section>

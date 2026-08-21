@@ -67,8 +67,8 @@
   min-height: 2.75rem;
   border: none;
   border-radius: var(--radius);
-  background: var(--accent);
-  color: #f8f4fb;
+  background: var(--green);
+  color: #f7faf5;
 }
 
 .game-form button[type='submit']:disabled {

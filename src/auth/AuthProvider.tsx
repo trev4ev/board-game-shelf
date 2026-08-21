@@ -24,7 +24,6 @@ type AuthContextValue = {
   refreshProfile: () => Promise<Profile | null>
   sendLoginEmail: (email: string) => Promise<void>
   verifyOtp: (email: string, token: string) => Promise<void>
-  signInWithPassword: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -123,18 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }, [])
 
-  const signInWithPassword = useCallback(
-    async (email: string, password: string) => {
-      if (!supabase) throw new Error('Supabase is not configured')
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-    },
-    [],
-  )
-
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) throw new Error('Supabase is not configured')
     const { error } = await supabase.auth.signInWithOAuth({
@@ -165,7 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       sendLoginEmail,
       verifyOtp,
-      signInWithPassword,
       signInWithGoogle,
       signOut,
     }),
@@ -177,7 +163,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       sendLoginEmail,
       verifyOtp,
-      signInWithPassword,
       signInWithGoogle,
       signOut,
     ],

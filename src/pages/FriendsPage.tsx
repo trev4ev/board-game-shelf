@@ -8,7 +8,7 @@ import {
   listFriendships,
   sendFriendRequest,
 } from '../lib/friends'
-import { searchProfiles } from '../lib/profiles'
+import { usernameSearchMessage, useUsernameSearch } from '../lib/useUsernameSearch'
 import type { Friendship } from '../types/friend'
 import type { Profile } from '../types/profile'
 import './FriendsPage.css'
@@ -16,12 +16,12 @@ import './FriendsPage.css'
 export function FriendsPage() {
   const { user } = useAuth()
   const [query, setQuery] = useState('')
-  const [hits, setHits] = useState<Profile[]>([])
   const [friendships, setFriendships] = useState<Friendship[]>([])
   const [error, setError] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const { hits, status: searchStatus } = useUsernameSearch(query, user?.id)
 
   useEffect(() => {
     if (!user) {
@@ -44,17 +44,6 @@ export function FriendsPage() {
       cancelled = true
     }
   }, [user])
-
-  useEffect(() => {
-    if (!user || query.trim().length < 2) {
-      setHits([])
-      return
-    }
-    const handle = window.setTimeout(() => {
-      void searchProfiles(query, user.id).then(setHits).catch(() => setHits([]))
-    }, 200)
-    return () => window.clearTimeout(handle)
-  }, [query, user])
 
   const byOther = useMemo(() => {
     const map = new Map<string, Friendship>()
@@ -82,7 +71,6 @@ export function FriendsPage() {
       await sendFriendRequest(user.id, profile.id)
       setHint(`Sent a request to ${profile.username}`)
       setQuery('')
-      setHits([])
       setFriendships(await listFriendships(user.id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send request')
@@ -132,6 +120,8 @@ export function FriendsPage() {
     )
   }
 
+  const searchMessage = usernameSearchMessage(query, searchStatus)
+
   return (
     <section className="friends-page">
       <h1>Friends</h1>
@@ -150,9 +140,18 @@ export function FriendsPage() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="start typing"
             autoComplete="off"
+            aria-describedby="username-search-status"
           />
         </label>
-        {hits.length > 0 && (
+        <p
+          id="username-search-status"
+          className="hint username-search-status"
+          aria-live="polite"
+          hidden={!searchMessage}
+        >
+          {searchMessage}
+        </p>
+        {searchStatus === 'results' && (
           <ul className="friend-results">
             {hits.map((profile) => {
               const existing = byOther.get(profile.id)

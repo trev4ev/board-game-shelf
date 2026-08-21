@@ -55,13 +55,35 @@
 .collection-hero {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  gap: 0.65rem 1rem;
+}
+
+.collection-hero-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.collection-back {
+  margin: 0;
 }
 
 .collection-hero h1 {
   margin-bottom: 0;
+}
+
+.collection-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+}
+
+.collection-hero-actions .add-game-btn {
+  min-height: 2.45rem;
+  padding: 0.45rem 0.85rem;
 }
 
 .collection-settings-link {
@@ -75,7 +97,7 @@
 }
 
 .collection-settings-link:hover {
-  color: var(--accent);
+  color: var(--green-ink);
 }
 
 .collection-search-row {
@@ -231,10 +253,11 @@
   margin-bottom: 0.2rem;
 }
 
-.more-chip {
-  background: var(--surface);
-  color: var(--green);
-  border-style: dashed;
+.chip-scroll {
+  max-height: calc(4.5 * 2.35rem + 4 * 0.4rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
 }
 
 .game-list {

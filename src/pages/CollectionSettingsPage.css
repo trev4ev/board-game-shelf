@@ -38,6 +38,19 @@
   color: var(--text);
 }
 
+.username-search-status {
+  margin: 0;
+}
+
+.username-search-status:empty,
+.username-search-status[hidden] {
+  display: none;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 .member-list,
 .username-suggestions {
   list-style: none;
@@ -63,6 +76,11 @@
   padding: 0.45rem 0.7rem;
   color: var(--text);
   cursor: pointer;
+}
+
+.username-suggestions button:hover {
+  background: var(--green-soft);
+  border-color: #c5d4bf;
 }
 
 .settings-form.danger {

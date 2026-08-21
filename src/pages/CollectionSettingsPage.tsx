@@ -11,9 +11,8 @@ import {
   removeCollectionMember,
   renameCollection,
 } from '../lib/collections'
-import { searchProfiles } from '../lib/profiles'
+import { usernameSearchMessage, useUsernameSearch } from '../lib/useUsernameSearch'
 import type { Collection, CollectionMember } from '../types/collection'
-import type { Profile } from '../types/profile'
 import './CollectionSettingsPage.css'
 
 export function CollectionSettingsPage() {
@@ -25,11 +24,11 @@ export function CollectionSettingsPage() {
   const [members, setMembers] = useState<CollectionMember[]>([])
   const [name, setName] = useState('')
   const [invite, setInvite] = useState('')
-  const [suggestions, setSuggestions] = useState<Profile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const { hits: suggestions, status: searchStatus } = useUsernameSearch(invite, user?.id)
 
   useEffect(() => {
     if (!collectionId) return
@@ -55,17 +54,6 @@ export function CollectionSettingsPage() {
       cancelled = true
     }
   }, [collectionId])
-
-  useEffect(() => {
-    if (invite.trim().length < 2 || !user) {
-      setSuggestions([])
-      return
-    }
-    const handle = window.setTimeout(() => {
-      void searchProfiles(invite, user.id).then(setSuggestions).catch(() => setSuggestions([]))
-    }, 200)
-    return () => window.clearTimeout(handle)
-  }, [invite, user])
 
   async function onRename(event: FormEvent) {
     event.preventDefault()
@@ -98,7 +86,6 @@ export function CollectionSettingsPage() {
     try {
       await inviteCollectionMember(collectionId, user.id, invite)
       setInvite('')
-      setSuggestions([])
       setHint(`Invited ${invite.trim()}`)
       await reloadMembers()
     } catch (err) {
@@ -192,6 +179,7 @@ export function CollectionSettingsPage() {
 
   const accepted = members.filter((member) => member.status === 'accepted')
   const pending = members.filter((member) => member.status === 'pending')
+  const searchMessage = usernameSearchMessage(invite, searchStatus)
 
   return (
     <section className="settings-page">
@@ -232,9 +220,18 @@ export function CollectionSettingsPage() {
             placeholder="friend_username"
             autoComplete="off"
             disabled={busy}
+            aria-describedby="invite-search-status"
           />
         </label>
-        {suggestions.length > 0 && (
+        <p
+          id="invite-search-status"
+          className="hint username-search-status"
+          aria-live="polite"
+          hidden={!searchMessage}
+        >
+          {searchMessage}
+        </p>
+        {searchStatus === 'results' && (
           <ul className="username-suggestions">
             {suggestions.map((profile) => (
               <li key={profile.id}>
@@ -242,7 +239,6 @@ export function CollectionSettingsPage() {
                   type="button"
                   onClick={() => {
                     setInvite(profile.username ?? '')
-                    setSuggestions([])
                   }}
                 >
                   {profile.username}

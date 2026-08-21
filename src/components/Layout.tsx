@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Menu, Plus, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { CollectionProvider, useCollections } from '../auth/CollectionProvider'
 import { isBggLookupEnabled } from '../lib/gameLookup'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Brand } from './Brand'
-import { Button, ButtonLink } from './Button'
+import { Button } from './Button'
 import './Layout.css'
 
 function initials(label: string | undefined) {
@@ -14,15 +14,29 @@ function initials(label: string | undefined) {
   return label.charAt(0).toUpperCase()
 }
 
+function pathIn(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`)
+}
+
+function navClass(active: boolean, className = 'header-nav-link') {
+  return active ? `${className} is-active` : className
+}
+
 function HeaderNav() {
   const { user, profile } = useAuth()
-  const { currentCollectionId, isMember, pendingInvites, acceptInvite, declineInvite } =
+  const { pendingInvites, acceptInvite, declineInvite } =
     useCollections()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const displayName = profile?.username ?? user?.email ?? 'Account'
-  const addGameTo = currentCollectionId && isMember ? `/c/${currentCollectionId}/games/new` : null
+  const collectionsActive =
+    location.pathname === '/' ||
+    pathIn(location.pathname, '/c') ||
+    pathIn(location.pathname, '/games')
+  const friendsActive = pathIn(location.pathname, '/friends')
+  const accountActive =
+    pathIn(location.pathname, '/login') || pathIn(location.pathname, '/onboarding')
 
   useEffect(() => {
     setMenuOpen(false)
@@ -66,34 +80,45 @@ function HeaderNav() {
           <div id="header-menu" className="app-header-menu">
             {user ? (
               <>
-                <NavLink to="/" className="header-nav-link">
+                <NavLink
+                  to="/"
+                  end
+                  className={navClass(collectionsActive)}
+                  aria-current={collectionsActive ? 'page' : undefined}
+                >
                   Collections
                 </NavLink>
-                <NavLink to="/friends" className="header-nav-link">
+                <NavLink
+                  to="/friends"
+                  className={navClass(friendsActive)}
+                  aria-current={friendsActive ? 'page' : undefined}
+                >
                   Friends
                 </NavLink>
-                <NavLink to="/login" className="owner-chip">
+                <NavLink
+                  to="/login"
+                  className={navClass(accountActive, 'owner-chip')}
+                  aria-current={accountActive ? 'page' : undefined}
+                >
                   <span className="owner-avatar" aria-hidden>
                     {initials(profile?.username ?? user.email)}
                   </span>
                   <span className="owner-meta">
                     <span className="owner-name">{displayName}</span>
-                    <span className="owner-role">
-                      {profile?.username ? 'Signed in' : 'Finish setup'}
-                    </span>
+                    {!profile?.username && (
+                      <span className="owner-role">Finish setup</span>
+                    )}
                   </span>
                 </NavLink>
               </>
             ) : (
-              <NavLink to="/login" className="owner-login">
+              <NavLink
+                to="/login"
+                className={navClass(accountActive, 'owner-login')}
+                aria-current={accountActive ? 'page' : undefined}
+              >
                 Sign in
               </NavLink>
-            )}
-            {addGameTo && (
-              <ButtonLink to={addGameTo} variant="outline" className="add-game-btn">
-                <Plus size={16} strokeWidth={2.25} aria-hidden />
-                Add game
-              </ButtonLink>
             )}
           </div>
         </div>

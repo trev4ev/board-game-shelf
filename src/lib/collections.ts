@@ -4,6 +4,7 @@ import type {
   Collection,
   CollectionMember,
   CollectionMembership,
+  CollectionSummary,
 } from '../types/collection'
 
 function requireClient() {
@@ -75,6 +76,65 @@ export async function listMyMemberships(
     })
   }
   return memberships
+}
+
+const PREVIEW_GAMES = 4
+
+export async function listCollectionSummaries(
+  collectionIds: string[],
+): Promise<Map<string, CollectionSummary>> {
+  const summaries = new Map<string, CollectionSummary>()
+  for (const id of collectionIds) {
+    summaries.set(id, {
+      collectionId: id,
+      gameCount: 0,
+      memberCount: 0,
+      games: [],
+    })
+  }
+  if (collectionIds.length === 0) return summaries
+
+  const client = requireClient()
+  const [{ data: gameRows, error: gameError }, { data: memberRows, error: memberError }] =
+    await Promise.all([
+      client
+        .from('games')
+        .select('id, collection_id, name, thumbnail_url')
+        .in('collection_id', collectionIds)
+        .order('name', { ascending: true }),
+      client
+        .from('collection_members')
+        .select('collection_id')
+        .in('collection_id', collectionIds)
+        .eq('status', 'accepted'),
+    ])
+  if (gameError) throw gameError
+  if (memberError) throw memberError
+
+  for (const row of (gameRows ?? []) as Array<{
+    id: string
+    collection_id: string
+    name: string
+    thumbnail_url: string | null
+  }>) {
+    const summary = summaries.get(row.collection_id)
+    if (!summary) continue
+    summary.gameCount += 1
+    if (summary.games.length < PREVIEW_GAMES) {
+      summary.games.push({
+        id: row.id,
+        name: row.name,
+        thumbnailUrl: row.thumbnail_url,
+      })
+    }
+  }
+
+  for (const row of (memberRows ?? []) as Array<{ collection_id: string }>) {
+    const summary = summaries.get(row.collection_id)
+    if (summary) summary.memberCount += 1
+  }
+
+  return summaries
 }
 
 export async function createCollection(userId: string, name: string): Promise<Collection> {

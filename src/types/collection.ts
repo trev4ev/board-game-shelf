@@ -22,3 +22,16 @@ export type CollectionMembership = {
   status: MembershipStatus
   createdAt: string
 }
+
+export type CollectionGamePreview = {
+  id: string
+  name: string
+  thumbnailUrl: string | null
+}
+
+export type CollectionSummary = {
+  collectionId: string
+  gameCount: number
+  memberCount: number
+  games: CollectionGamePreview[]
+}

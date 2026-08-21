@@ -70,7 +70,7 @@
 }
 
 .log-play-suggest button:hover {
-  background: var(--accent-soft);
+  background: var(--green-soft);
 }
 
 .log-play-suggest span {
@@ -164,8 +164,8 @@
 }
 
 .log-play-icon:hover:not(:disabled) {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--green-soft);
+  color: var(--green-ink);
 }
 
 .log-play-icon:disabled {
