@@ -18,6 +18,12 @@ artifact, built from the `staging` branch.
 **Do not push to `main`.** It is PR-only. Never `git push origin HEAD:main`
 or merge locally onto `main`.
 
+If a direct push to `main` still succeeds, the repo owner needs to turn
+on branch protection (agents cannot: the API returns 403). Settings →
+Rules → Rulesets → New branch ruleset targeting `main`: require a pull
+request (0 approvals is fine), block force pushes and deletions, and do
+not add bypass actors.
+
 ### Ship a change to staging
 
 1. Branch from `origin/staging` (not `main`, unless staging is behind and
