@@ -1,13 +1,15 @@
-# Cut production (`main`) to the current tip of `staging`.
+# Fast-forward production (`main`) to the current tip of `staging`.
 #
-# `main` is not updated by PRs. After this job runs, `main` and
-# `staging` point at the same commit. GitHub Pages then publishes from
-# that commit (production at the site root, staging under /staging/).
+# After this job runs, `main` and `staging` point at the same commit.
+# GitHub Pages then publishes from that commit (production at the site
+# root, staging under /staging/).
 #
-# The default GITHUB_TOKEN is github-actions[bot], which cannot be a
-# ruleset bypass actor on a personal repo. This job pushes with
-# secrets.PROMOTE_TOKEN (a fine-grained PAT for the repo owner) so the
-# push matches the Repository admin bypass on Protect main. See AGENTS.md.
+# Uses the default GITHUB_TOKEN (no PAT). That only works if Protect
+# main does NOT require a pull request and does NOT restrict updates.
+# Keep "block force pushes" on: this job only fast-forwards. See AGENTS.md.
+#
+# GITHUB_TOKEN pushes do not trigger other on.push workflows, so this
+# job also dispatches Deploy GitHub Pages.
 
 name: Promote staging to production
 
@@ -20,7 +22,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 concurrency:
@@ -41,26 +43,15 @@ jobs:
             exit 1
           fi
 
-      - name: Require PROMOTE_TOKEN
-        env:
-          PROMOTE_TOKEN: ${{ secrets.PROMOTE_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "$PROMOTE_TOKEN" ]; then
-            echo '::error::Add repository secret PROMOTE_TOKEN (fine-grained PAT, Contents: Read and write) and add Repository admin as a Protect main bypass actor. The built-in GitHub Actions app is not a bypass option on a personal repo. See AGENTS.md.'
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.PROMOTE_TOKEN }}
 
-      - name: Point main at staging
+      - name: Fast-forward main to staging
         env:
-          GH_TOKEN: ${{ secrets.PROMOTE_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           git fetch origin staging main
@@ -70,12 +61,15 @@ jobs:
           echo "main=$MAIN_SHA"
           if [ "$STAGING_SHA" = "$MAIN_SHA" ]; then
             echo "main already matches staging; nothing to push."
-          else
-            if ! git push --force-with-lease="refs/heads/main:$MAIN_SHA" \
-              origin "$STAGING_SHA:refs/heads/main"; then
-              echo "::error::Push to main was rejected. Add Repository admin as a Protect main bypass actor (Always allow), and set secret PROMOTE_TOKEN to a fine-grained PAT for that admin with Contents read/write. See AGENTS.md."
-              exit 1
-            fi
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor "$MAIN_SHA" "$STAGING_SHA"; then
+            echo "::error::main is not an ancestor of staging, so this would not be a fast-forward. Force-push is blocked. Merge main into staging (or otherwise put main's commits on staging) and run promote again."
+            exit 1
+          fi
+          if ! git push origin "$STAGING_SHA:refs/heads/main"; then
+            echo "::error::Push to main was rejected. On Protect main, turn off Require a pull request and do not enable Restrict updates. Keep Restrict deletions and Block force pushes. See AGENTS.md."
+            exit 1
           fi
 
       - name: Deploy GitHub Pages from the new main
