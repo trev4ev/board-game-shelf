@@ -61,6 +61,7 @@
   display: grid;
   place-items: center;
   background: var(--green-soft);
+  border: 1px solid var(--border);
   color: var(--green-ink);
   font-weight: 700;
   font-size: 0.9rem;
