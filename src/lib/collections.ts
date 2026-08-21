@@ -250,17 +250,38 @@ export async function removeCollectionMember(
   userId: string,
 ): Promise<void> {
   const client = requireClient()
-  const { error } = await client
+  const { data, error } = await client
     .from('collection_members')
     .delete()
     .eq('collection_id', collectionId)
     .eq('user_id', userId)
+    .select('user_id')
   if (error) {
-    if (error.code === 'P0001' || error.message.toLowerCase().includes('last member')) {
+    const message = error.message.toLowerCase()
+    if (error.code === 'P0001' || message.includes('last member')) {
       throw new Error('You are the last member. Delete the collection instead.')
+    }
+    if (error.code === 'P0002' || message.includes('creator')) {
+      throw new Error('The collection creator cannot be removed.')
     }
     throw error
   }
+  if (!data?.length) {
+    throw new Error('The collection creator cannot be removed.')
+  }
+}
+
+export function isCollectionCreator(collection: Collection, userId: string) {
+  return collection.createdBy === userId
+}
+
+/** Anyone can leave; only non-creators can be removed by other members. */
+export function canRemoveCollectionMember(
+  collection: Collection,
+  actorId: string,
+  memberUserId: string,
+) {
+  return memberUserId === actorId || !isCollectionCreator(collection, memberUserId)
 }
 
 export function isAcceptedMember(

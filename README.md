@@ -59,6 +59,7 @@ In the Supabase dashboard:
 2. Authentication → URL Configuration → Redirect URLs: add the local origin
    `/login` and the GitHub Pages `/login` (and the site origin).
 3. Run SQL in `supabase/migrations/` if the remote schema is behind the repo
-   (`20260820_accounts_collections.sql` adds profiles, collections, friends).
+   (`20260821_protect_collection_creator.sql` stops co-owners from removing
+   the original collection creator).
 
 The Edge Function `bgg` reads `BGG_API_TOKEN` from function secrets.
