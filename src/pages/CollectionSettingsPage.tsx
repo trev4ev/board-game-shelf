@@ -4,9 +4,11 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button } from '../components/Button'
 import {
+  canRemoveCollectionMember,
   deleteCollection,
   getCollection,
   inviteCollectionMember,
+  isCollectionCreator,
   listCollectionMembers,
   removeCollectionMember,
   renameCollection,
@@ -209,8 +211,9 @@ export function CollectionSettingsPage() {
       <form className="settings-form" onSubmit={(event) => void onInvite(event)}>
         <h2>Invite a co-owner</h2>
         <p className="hint">
-          Co-owners can add games, log plays, and invite others. They need an
-          account and username.
+          Co-owners can add games, log plays, and invite others. They cannot
+          remove the original collection creator. Invitees need an account
+          and username.
         </p>
         <label>
           Username
@@ -255,21 +258,35 @@ export function CollectionSettingsPage() {
       <div className="settings-form">
         <h2>Members</h2>
         <ul className="member-list">
-          {accepted.map((member) => (
-            <li key={member.userId}>
-              <span>
-                {member.username ?? 'Unknown'}
-                {member.userId === user.id ? ' (you)' : ''}
-              </span>
-              <Button
-                variant="ghost"
-                onClick={() => void onRemove(member)}
-                disabled={busy}
-              >
-                {member.userId === user.id ? 'Leave' : 'Remove'}
-              </Button>
-            </li>
-          ))}
+          {accepted.map((member) => {
+            const creator = isCollectionCreator(collection, member.userId)
+            const self = member.userId === user.id
+            const canRemove = canRemoveCollectionMember(
+              collection,
+              user.id,
+              member.userId,
+            )
+            return (
+              <li key={member.userId}>
+                <span>
+                  {member.username ?? 'Unknown'}
+                  {self ? ' (you)' : ''}
+                  {creator ? ' (creator)' : ''}
+                </span>
+                {canRemove ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => void onRemove(member)}
+                    disabled={busy}
+                  >
+                    {self ? 'Leave' : 'Remove'}
+                  </Button>
+                ) : (
+                  <span className="hint">Can't be removed</span>
+                )}
+              </li>
+            )
+          })}
         </ul>
         {pending.length > 0 && (
           <>

@@ -8,7 +8,8 @@ game night, and pick something to play — manually or at random.
 Core functionality
 ------------------
 - Create an account (Google, or email) and choose a username
-- Create collections; invite other users as equal co-owners
+- Create collections; invite other users as co-owners (the original
+  creator cannot be removed by others)
 - Add, edit, and remove games from a collection you co-own
 - Store game details aligned with BoardGameGeek fields (players, play
   time, categories, mechanics, complexity 1–5, images, etc.) plus collection
