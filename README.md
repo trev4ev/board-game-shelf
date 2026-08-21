@@ -31,12 +31,16 @@ Vite proxy (`/api/bgg`). The token stays on the Vite server.
 
 ## Production and staging
 
-GitHub Actions builds **both** sites whenever `main` or `staging` is pushed,
-then publishes one Pages artifact:
+GitHub Actions rebuilds **both** sites on every push to `main` (the
+`github-pages` environment only allows deploys from `main`):
 
 - Production (`main`): https://trevoraquino.me/board-game-shelf/  
   (also https://trev4ev.github.io/board-game-shelf/)
 - Staging (`staging` branch): https://trevoraquino.me/board-game-shelf/staging/
+
+Push feature work to `staging`, then either merge to `main` or run
+**Actions → Deploy GitHub Pages → Run workflow** on `main` to publish both.
+A push to `staging` alone does not update GitHub Pages.
 
 Staging uses the same Supabase project as production. Add these Redirect URLs
 in Authentication → URL Configuration before signing in on staging:
