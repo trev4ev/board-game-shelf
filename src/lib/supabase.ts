@@ -13,5 +13,10 @@ export const isSupabaseConfigured = Boolean(url && publishableKey)
  * so local UI work can proceed before a Supabase project exists.
  */
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(url!, publishableKey!)
+  ? createClient(url!, publishableKey!, {
+      auth: {
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+      },
+    })
   : null

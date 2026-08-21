@@ -6,8 +6,9 @@ import {
   useState,
   type FormEvent,
 } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useCollections } from '../auth/CollectionProvider'
 import {
   gameLookup,
   type GameLookupResult,
@@ -20,6 +21,8 @@ type AddGameStatus = 'idle' | 'searching' | 'loading' | 'saving' | 'error'
 
 type AddGameContextValue = {
   user: ReturnType<typeof useAuth>['user']
+  isMember: boolean
+  collectionId: string | undefined
   isDesktop: boolean
   query: string
   setQuery: (value: string) => void
@@ -37,7 +40,9 @@ type AddGameContextValue = {
 const AddGameContext = createContext<AddGameContextValue | null>(null)
 
 export function AddGameLayout() {
+  const { collectionId } = useParams()
   const { user } = useAuth()
+  const { isMember } = useCollections()
   const navigate = useNavigate()
   const isDesktop = useMediaQuery('(min-width: 48rem)')
   const [query, setQuery] = useState('')
@@ -97,15 +102,15 @@ export function AddGameLayout() {
   )
 
   const onSave = useCallback(async () => {
-    if (!user) {
-      setError('Sign in as the owner before saving to your collection.')
+    if (!user || !isMember || !collectionId) {
+      setError('Sign in as a collection member before saving.')
       return
     }
 
     setStatus('saving')
     setError(null)
     try {
-      const game = await createGame(form)
+      const game = await createGame(collectionId, form)
       navigate(`/games/${game.id}`)
     } catch (err) {
       setStatus('error')
@@ -116,11 +121,13 @@ export function AddGameLayout() {
         setError(message)
       }
     }
-  }, [form, navigate, user])
+  }, [collectionId, form, isMember, navigate, user])
 
   const value = useMemo<AddGameContextValue>(
     () => ({
       user,
+      isMember,
+      collectionId,
       isDesktop,
       query,
       setQuery,
@@ -136,6 +143,8 @@ export function AddGameLayout() {
     }),
     [
       user,
+      isMember,
+      collectionId,
       isDesktop,
       query,
       results,

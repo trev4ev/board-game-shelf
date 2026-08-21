@@ -15,7 +15,7 @@
   height: auto;
   border-radius: 0.5rem;
   margin: 0 0 1rem;
-  background: var(--banner-bg);
+  background: var(--green-soft);
 }
 
 .game-actions {
@@ -114,6 +114,13 @@
 .play-history-score {
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
+}
+
+.play-history-tag {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green);
 }
 
 .game-catalog {

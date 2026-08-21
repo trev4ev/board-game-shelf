@@ -2,6 +2,7 @@ export type PlayPlayer = {
   name: string
   place: number
   score: number | null
+  userId: string | null
 }
 
 export type Play = {

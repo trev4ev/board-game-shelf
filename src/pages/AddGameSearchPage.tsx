@@ -7,6 +7,7 @@ import './AddGamePage.css'
 export function AddGameSearchPage() {
   const {
     user,
+    isMember,
     isDesktop,
     query,
     setQuery,
@@ -30,8 +31,8 @@ export function AddGameSearchPage() {
 
       {!user && (
         <p className="hint">
-          You can fill in details without signing in, but saving requires an
-          owner account. <Link to="/login">Sign in</Link>
+          You can fill in details without signing in, but saving requires a
+          collection you co-own. <Link to="/login">Sign in</Link>
         </p>
       )}
 
@@ -101,7 +102,7 @@ export function AddGameSearchPage() {
               onSubmit={onSave}
               submitLabel="Save to collection"
               busy={status === 'saving'}
-              disabled={!user}
+              disabled={!user || !isMember}
             />
           </div>
         )}

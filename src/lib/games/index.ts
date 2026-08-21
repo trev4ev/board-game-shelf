@@ -15,7 +15,6 @@ export {
   filtersAreActive,
   uniqueCategories,
   applicableCategories,
-  visibleCategoryChips,
   pickRandomGame,
   formatPlayerFilter,
   formatTimeFilter,

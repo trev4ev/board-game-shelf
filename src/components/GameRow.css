@@ -14,7 +14,7 @@
 
 .game-row:hover {
   background: var(--surface-hover);
-  border-color: #cfc6d8;
+  border-color: #c5d4bf;
 }
 
 .game-row-thumb,
@@ -24,7 +24,7 @@
   border-radius: 0.45rem;
   object-fit: cover;
   flex-shrink: 0;
-  background: var(--accent-soft);
+  background: var(--green-soft);
 }
 
 .game-row-body {
@@ -73,6 +73,6 @@
 }
 
 .game-row-chevron {
-  color: #c5bdc9;
+  color: var(--green);
   flex-shrink: 0;
 }

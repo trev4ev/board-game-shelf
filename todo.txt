@@ -47,3 +47,9 @@ Deferred (not in scope yet)
 [ ] Exclude recently played from random pick
 [ ] Photos beyond BGG thumbnail/image
 [ ] Shortlist / "tonight's candidates" before random pick
+
+Accounts / collections
+----------------------
+[x] User accounts (Google + email) and username onboarding
+[x] Per-user collections with equal co-owners
+[x] Friends + tagged players on plays (guest names still allowed)

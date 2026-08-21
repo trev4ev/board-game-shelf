@@ -5,7 +5,7 @@ Goals
 -----
 - Host on GitHub Pages (static site, low traffic)
 - Simple data setup — avoid running your own server if possible
-- Owner can add/edit games; guests can browse, filter, and random-pick
+- Signed-in members edit their collections; guests can browse a shared URL
 
 
 Constraint: GitHub Pages
@@ -31,11 +31,13 @@ Frontend
 
 Data & auth
   - Supabase (free tier)
-    - Postgres table for games
-    - Email magic-link / OTP auth for the owner only
-    - Row-level security: public read, authenticated write
-  - Why Supabase: real shared DB, tiny setup, no server to maintain,
-    fits guest vs owner cleanly
+    - Postgres tables for profiles, collections, memberships, friendships,
+      games, and plays
+    - Google OAuth (primary) plus email magic-link / OTP and password
+    - Username chosen in-app after first sign-in (not from user_metadata)
+    - Row-level security: public read of collections/games/plays; writes
+      only for accepted collection members
+  - Why Supabase: real shared DB, tiny setup, no server to maintain
 
 Hosting
   - GitHub Pages for the frontend
@@ -99,7 +101,7 @@ care about, plus our collection metadata. Manual entry and BGG prefill
 write the same columns.
 
 Catalog fields (BGG-aligned; editable; null until set)
-  - bggId              number | null, unique when set (item @id)
+  - bggId              number | null, unique per collection when set
   - name               string (required)
   - yearPublished      number | null
   - description        string | null
@@ -124,6 +126,7 @@ Weight (BGG averageweight) — use this directly; no separate complexity enum
 
 Collection fields (ours only)
   - id                 uuid (primary key)
+  - collectionId       uuid (shelf this copy belongs to)
   - lastPlayed         date | null
   - playCount          number (default 0)
   - isFavorite         boolean (default false)
@@ -132,8 +135,10 @@ Collection fields (ours only)
   - updatedAt          timestamp
 
 Access
-  - Guests: read + filter + search + random pick
-  - Owner (signed in): create / update / delete games
+  - Guests: read + filter + search + random pick on a collection URL
+  - Collection members (signed in, accepted): create / update / delete games,
+    log plays, invite co-owners
+  - Friends: request/accept by username; optional userId on play player rows
 
 
 BGG seam (keep lookup separate, easy to add later)

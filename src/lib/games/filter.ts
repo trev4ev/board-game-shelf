@@ -59,20 +59,6 @@ export function applicableCategories(
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
-export function visibleCategoryChips(
-  categories: string[],
-  selected: string[],
-  showAll: boolean,
-  previewLimit: number,
-): string[] {
-  if (showAll) return categories
-  const shown = new Set(categories.slice(0, previewLimit))
-  for (const category of selected) {
-    if (category) shown.add(category)
-  }
-  return categories.filter((category) => shown.has(category))
-}
-
 function playMinutes(game: Game): number | null {
   return game.playTime ?? game.maxPlayTime ?? game.minPlayTime
 }

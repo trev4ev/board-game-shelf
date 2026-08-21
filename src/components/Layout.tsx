@@ -1,29 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
-import { Menu, Plus, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { CollectionProvider, useCollections } from '../auth/CollectionProvider'
 import { isBggLookupEnabled } from '../lib/gameLookup'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Brand } from './Brand'
-import { ButtonLink } from './Button'
+import { Button } from './Button'
 import './Layout.css'
 
-function ownerLabel(email: string | undefined) {
-  if (!email) return 'Owner'
-  const local = email.split('@')[0] ?? email
-  return local.charAt(0).toUpperCase() + local.slice(1)
+function initials(label: string | undefined) {
+  if (!label) return '?'
+  return label.charAt(0).toUpperCase()
 }
 
-function initials(email: string | undefined) {
-  if (!email) return '?'
-  return email.charAt(0).toUpperCase()
+function pathIn(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
 
-export function Layout() {
-  const { user } = useAuth()
+function navClass(active: boolean, className = 'header-nav-link') {
+  return active ? `${className} is-active` : className
+}
+
+function HeaderNav() {
+  const { user, profile } = useAuth()
+  const { pendingInvites, acceptInvite, declineInvite } =
+    useCollections()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const displayName = profile?.username ?? user?.email ?? 'Account'
+  const collectionsActive =
+    location.pathname === '/' ||
+    pathIn(location.pathname, '/c') ||
+    pathIn(location.pathname, '/games')
+  const friendsActive = pathIn(location.pathname, '/friends')
+  const accountActive =
+    pathIn(location.pathname, '/login') || pathIn(location.pathname, '/onboarding')
 
   useEffect(() => {
     setMenuOpen(false)
@@ -43,7 +56,7 @@ export function Layout() {
   }, [menuOpen])
 
   return (
-    <div className="app-shell">
+    <>
       <header className="app-header">
         <Brand />
         <div
@@ -66,50 +79,104 @@ export function Layout() {
           </button>
           <div id="header-menu" className="app-header-menu">
             {user ? (
-              <NavLink to="/login" className="owner-chip">
-                <span className="owner-avatar" aria-hidden>
-                  {initials(user.email)}
-                </span>
-                <span className="owner-meta">
-                  <span className="owner-name">{ownerLabel(user.email)}</span>
-                  <span className="owner-role">Owner</span>
-                </span>
-              </NavLink>
+              <>
+                <NavLink
+                  to="/"
+                  end
+                  className={navClass(collectionsActive)}
+                  aria-current={collectionsActive ? 'page' : undefined}
+                >
+                  Collections
+                </NavLink>
+                <NavLink
+                  to="/friends"
+                  className={navClass(friendsActive)}
+                  aria-current={friendsActive ? 'page' : undefined}
+                >
+                  Friends
+                </NavLink>
+                <NavLink
+                  to="/login"
+                  className={navClass(accountActive, 'owner-chip')}
+                  aria-current={accountActive ? 'page' : undefined}
+                >
+                  <span className="owner-avatar" aria-hidden>
+                    {initials(profile?.username ?? user.email)}
+                  </span>
+                  <span className="owner-meta">
+                    <span className="owner-name">{displayName}</span>
+                    {!profile?.username && (
+                      <span className="owner-role">Finish setup</span>
+                    )}
+                  </span>
+                </NavLink>
+              </>
             ) : (
-              <NavLink to="/login" className="owner-login">
-                Owner login
+              <NavLink
+                to="/login"
+                className={navClass(accountActive, 'owner-login')}
+                aria-current={accountActive ? 'page' : undefined}
+              >
+                Sign in
               </NavLink>
-            )}
-            {user && (
-              <ButtonLink to="/games/new" variant="outline" className="add-game-btn">
-                <Plus size={16} strokeWidth={2.25} aria-hidden />
-                Add game
-              </ButtonLink>
             )}
           </div>
         </div>
       </header>
-
-      {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
-        <aside className="dev-banners" aria-label="Setup status">
-          {!isSupabaseConfigured && (
-            <p className="banner">
-              Supabase env not set — copy <code>.env.example</code> to{' '}
-              <code>.env</code> when ready.
+      {pendingInvites.length > 0 && (
+        <aside className="invite-banners" aria-label="Collection invites">
+          {pendingInvites.map((invite) => (
+            <p key={invite.collection.id} className="invite-banner">
+              Invited to <strong>{invite.collection.name}</strong>
+              <span className="invite-banner-actions">
+                <Button
+                  variant="accent"
+                  onClick={() => void acceptInvite(invite.collection.id)}
+                >
+                  Accept
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => void declineInvite(invite.collection.id)}
+                >
+                  Decline
+                </Button>
+              </span>
             </p>
-          )}
-          {import.meta.env.DEV && !isBggLookupEnabled && (
-            <p className="banner muted">
-              BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
-              for local search via the Vite proxy.
-            </p>
-          )}
+          ))}
         </aside>
       )}
+    </>
+  )
+}
 
-      <main className="app-main">
-        <Outlet />
-      </main>
-    </div>
+export function Layout() {
+  return (
+    <CollectionProvider>
+      <div className="app-shell">
+        <HeaderNav />
+
+        {(!isSupabaseConfigured || (import.meta.env.DEV && !isBggLookupEnabled)) && (
+          <aside className="dev-banners" aria-label="Setup status">
+            {!isSupabaseConfigured && (
+              <p className="banner">
+                Supabase env not set — copy <code>.env.example</code> to{' '}
+                <code>.env</code> when ready.
+              </p>
+            )}
+            {import.meta.env.DEV && !isBggLookupEnabled && (
+              <p className="banner muted">
+                BGG lookup disabled. Set <code>VITE_BGG_LOOKUP_ENABLED=true</code>{' '}
+                for local search via the Vite proxy.
+              </p>
+            )}
+          </aside>
+        )}
+
+        <main className="app-main">
+          <Outlet />
+        </main>
+      </div>
+    </CollectionProvider>
   )
 }

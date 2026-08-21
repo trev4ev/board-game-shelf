@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Brain, Clock, Dices, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { Brain, Clock, Dices, Plus, Settings, SlidersHorizontal, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import { useCollections } from '../auth/CollectionProvider'
 import { Button, ButtonLink } from '../components/Button'
 import { Chip } from '../components/Chip'
 import { GameRow } from '../components/GameRow'
 import { RangeSlider } from '../components/RangeSlider'
 import { SearchField } from '../components/SearchField'
 import { Toggle } from '../components/Toggle'
+import { getCollection } from '../lib/collections'
 import {
   applicableCategories,
   COMPLEXITY_SLIDER_STEP,
@@ -18,7 +20,6 @@ import {
   formatTimeFilter,
   listGames,
   pickRandomGame,
-  visibleCategoryChips,
   PLAYER_SLIDER_MAX,
   PLAYER_SLIDER_MIN,
   TIME_SLIDER_MAX,
@@ -29,40 +30,42 @@ import { formatPlayTime, formatPlayerRange } from '../lib/games/display'
 import { COMPLEXITY_MAX, COMPLEXITY_MIN, formatComplexity } from '../lib/complexity'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useMediaQuery } from '../lib/useMediaQuery'
+import type { Collection } from '../types/collection'
 import type { Game, GameFilters } from '../types/game'
 import './CollectionPage.css'
-
-const CATEGORY_PREVIEW = 8
 
 function toggleValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
 }
 
 export function CollectionPage() {
+  const { collectionId } = useParams()
   const { user } = useAuth()
+  const { isMember } = useCollections()
   const isDesktop = useMediaQuery('(min-width: 58rem)')
+  const [collection, setCollection] = useState<Collection | null>(null)
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(isSupabaseConfigured)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<GameFilters>(emptyFilters)
   const [picked, setPicked] = useState<Game | null>(null)
-  const [showAllCategories, setShowAllCategories] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || !collectionId) {
       setLoading(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
-    listGames()
-      .then((rows) => {
+    Promise.all([getCollection(collectionId), listGames(collectionId)])
+      .then(([shelf, rows]) => {
         if (!cancelled) {
+          setCollection(shelf)
           setGames(rows)
-          setError(null)
+          setError(shelf ? null : 'Collection not found')
         }
       })
       .catch((err) => {
@@ -77,27 +80,13 @@ export function CollectionPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [collectionId])
 
   const visible = useMemo(() => filterGames(games, filters), [games, filters])
   const categories = useMemo(
     () => applicableCategories(games, filters),
     [games, filters],
   )
-  const visibleCategories = useMemo(
-    () =>
-      visibleCategoryChips(
-        categories,
-        filters.categories,
-        showAllCategories,
-        CATEGORY_PREVIEW,
-      ),
-    [categories, filters.categories, showAllCategories],
-  )
-  const hiddenCategoryCount = categories.length - visibleCategories.length
-  const showCategoryToggle =
-    hiddenCategoryCount > 0 ||
-    (showAllCategories && categories.length > CATEGORY_PREVIEW)
   const filtersOn = filtersAreActive(filters)
   const toolsReady = !loading && !error && isSupabaseConfigured
   const showFilterSheet = toolsReady && (isDesktop || showFilters)
@@ -135,7 +124,28 @@ export function CollectionPage() {
         <div className="collection-primary">
         <div className="collection-main">
           <div className="collection-hero">
-            <h1>Game collection</h1>
+            <div className="collection-hero-copy">
+              <p className="hint collection-back">
+                <Link to="/">← Collections</Link>
+              </p>
+              <h1>{collection?.name ?? 'Game collection'}</h1>
+            </div>
+            {isMember && collectionId ? (
+              <div className="collection-hero-actions">
+                <ButtonLink
+                  to={`/c/${collectionId}/games/new`}
+                  variant="accent"
+                  className="add-game-btn"
+                >
+                  <Plus size={16} strokeWidth={2.25} aria-hidden />
+                  Add game
+                </ButtonLink>
+                <Link to={`/c/${collectionId}/settings`} className="collection-settings-link">
+                  <Settings size={16} strokeWidth={2} aria-hidden />
+                  Settings
+                </Link>
+              </div>
+            ) : null}
           </div>
 
           {!isSupabaseConfigured && (
@@ -206,13 +216,15 @@ export function CollectionPage() {
           {!loading && !error && games.length === 0 && isSupabaseConfigured && (
             <p className="hint">
               No games yet.
-              {user ? (
+              {user && isMember && collectionId ? (
                 <>
                   {' '}
-                  <Link to="/games/new">Add your first game</Link>.
+                  <Link to={`/c/${collectionId}/games/new`}>Add your first game</Link>.
                 </>
+              ) : user ? (
+                ' You can browse this shelf; members can add games.'
               ) : (
-                ' Sign in as the owner to add games.'
+                ' Sign in to add games to a collection you co-own.'
               )}
             </p>
           )}
@@ -333,31 +345,22 @@ export function CollectionPage() {
             {categories.length > 0 && (
               <fieldset className="filter-fieldset">
                 <legend>Category</legend>
-                <div className="chip-row">
-                  {visibleCategories.map((category) => (
-                    <Chip
-                      key={category}
-                      checked={filters.categories.includes(category)}
-                      onChange={() =>
-                        patchFilters({
-                          categories: toggleValue(filters.categories, category),
-                        })
-                      }
-                    >
-                      {category}
-                    </Chip>
-                  ))}
-                  {showCategoryToggle ? (
-                    <button
-                      type="button"
-                      className="chip more-chip"
-                      onClick={() => setShowAllCategories((open) => !open)}
-                    >
-                      {showAllCategories
-                        ? 'Less'
-                        : `+ More (${hiddenCategoryCount})`}
-                    </button>
-                  ) : null}
+                <div className="chip-scroll">
+                  <div className="chip-row">
+                    {categories.map((category) => (
+                      <Chip
+                        key={category}
+                        checked={filters.categories.includes(category)}
+                        onChange={() =>
+                          patchFilters({
+                            categories: toggleValue(filters.categories, category),
+                          })
+                        }
+                      >
+                        {category}
+                      </Chip>
+                    ))}
+                  </div>
                 </div>
               </fieldset>
             )}

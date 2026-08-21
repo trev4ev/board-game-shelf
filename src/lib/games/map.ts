@@ -3,6 +3,7 @@ import type { Game, GameInput } from '../../types/game'
 /** Row shape returned by PostgREST (snake_case) */
 export type GameRow = {
   id: string
+  collection_id: string
   bgg_id: number | null
   name: string
   year_published: number | null
@@ -30,6 +31,7 @@ export type GameRow = {
 export function rowToGame(row: GameRow): Game {
   return {
     id: row.id,
+    collectionId: row.collection_id,
     bggId: row.bgg_id,
     name: row.name,
     yearPublished: row.year_published,
@@ -57,7 +59,7 @@ export function rowToGame(row: GameRow): Game {
 
 export function gameInputToRow(
   input: GameInput,
-): Omit<GameRow, 'id' | 'created_at' | 'updated_at'> {
+): Omit<GameRow, 'id' | 'collection_id' | 'created_at' | 'updated_at'> {
   return {
     bgg_id: input.bggId,
     name: input.name.trim(),

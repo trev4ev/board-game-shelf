@@ -4,17 +4,17 @@ import { useAddGame } from './AddGameLayout'
 import './AddGamePage.css'
 
 export function AddGameReviewPage() {
-  const { user, form, setForm, selectedBggId, status, error, onSave } =
+  const { user, form, setForm, selectedBggId, status, error, onSave, isMember, collectionId } =
     useAddGame()
 
   if (!form.name && selectedBggId == null) {
-    return <Navigate to="/games/new" replace />
+    return <Navigate to={collectionId ? `/c/${collectionId}/games/new` : '/'} replace />
   }
 
   return (
     <section>
       <p className="hint">
-        <Link to="/games/new">← Search results</Link>
+        <Link to={collectionId ? `/c/${collectionId}/games/new` : '/'}>← Search results</Link>
       </p>
       <h1>Game details</h1>
       <p className="lede">
@@ -22,7 +22,7 @@ export function AddGameReviewPage() {
       </p>
       {!user && (
         <p className="hint">
-          Saving requires an owner account. <Link to="/login">Sign in</Link>
+          Saving requires a collection you co-own. <Link to="/login">Sign in</Link>
         </p>
       )}
       {error && <p className="error">{error}</p>}
@@ -32,7 +32,7 @@ export function AddGameReviewPage() {
         onSubmit={onSave}
         submitLabel="Save to collection"
         busy={status === 'saving'}
-        disabled={!user}
+        disabled={!user || !isMember}
       />
     </section>
   )

@@ -18,7 +18,8 @@ Vite proxy (`/api/bgg`). The token stays on the Vite server.
 
 - Vite + React + TypeScript, deployed to GitHub Pages
 - React Router (`basename` matches `VITE_BASE_PATH` on Pages)
-- Supabase (publishable key) for the games table + owner email auth
+- Supabase (publishable key) for collections, games, plays, friends, and auth
+- Auth: Google OAuth (primary) plus email/password and email OTP
 - BGG lookup: Vite proxy in dev; Supabase Edge Function `bgg` in production
 
 ## Scripts
@@ -38,5 +39,16 @@ Required GitHub Actions secrets:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-In the Supabase dashboard, add the Pages URL (and `/login`) to Auth redirect
-allow-list. The Edge Function `bgg` reads `BGG_API_TOKEN` from function secrets.
+### Auth redirects (required)
+
+In the Supabase dashboard:
+
+1. Authentication → Providers → enable **Google**. Add the Google Cloud OAuth
+   Web client ID and secret. Authorized redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`
+2. Authentication → URL Configuration → Redirect URLs: add the local origin
+   `/login` and the GitHub Pages `/login` (and the site origin).
+3. Run SQL in `supabase/migrations/` if the remote schema is behind the repo
+   (`20260820_accounts_collections.sql` adds profiles, collections, friends).
+
+The Edge Function `bgg` reads `BGG_API_TOKEN` from function secrets.

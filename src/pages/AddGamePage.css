@@ -58,8 +58,8 @@
   padding: 0.6rem 1rem;
   border: none;
   border-radius: 0.4rem;
-  background: var(--text);
-  color: #f4f7f9;
+  background: var(--green);
+  color: #f7faf5;
 }
 
 .bgg-search-row button:disabled {
@@ -91,16 +91,16 @@
 }
 
 .bgg-results button:hover:not(:disabled) {
-  background: var(--banner-bg);
+  background: var(--green-soft);
 }
 
 .bgg-results button.selected {
-  background: var(--text);
-  color: #f4f7f9;
+  background: var(--green);
+  color: #f7faf5;
 }
 
 .bgg-results button.selected .bgg-result-year {
-  color: #d5dee4;
+  color: #e6f0e2;
 }
 
 .bgg-result-name {
@@ -189,8 +189,8 @@
   padding: 0.65rem 1.1rem;
   border: none;
   border-radius: 0.4rem;
-  background: var(--text);
-  color: #f4f7f9;
+  background: var(--green);
+  color: #f7faf5;
 }
 
 .save-button:disabled {

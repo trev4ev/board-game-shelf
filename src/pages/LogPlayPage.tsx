@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useCollections } from '../auth/CollectionProvider'
 import { LogPlayForm } from '../components/LogPlayForm'
+import { isAcceptedMember } from '../lib/collections'
 import { createPlay, getGame } from '../lib/games'
 import type { Game } from '../types/game'
 import type { PlayInput } from '../types/play'
 
 export function LogPlayPage() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { memberships, setActiveCollectionId } = useCollections()
   const navigate = useNavigate()
   const [game, setGame] = useState<Game | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -23,6 +24,7 @@ export function LogPlayPage() {
         if (!cancelled) {
           setGame(row)
           setError(row ? null : 'Game not found')
+          if (row) setActiveCollectionId(row.collectionId)
         }
       })
       .catch((err) => {
@@ -36,7 +38,7 @@ export function LogPlayPage() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, setActiveCollectionId])
 
   async function onSubmit(input: PlayInput) {
     if (!game) return
@@ -51,6 +53,8 @@ export function LogPlayPage() {
     }
   }
 
+  const canEdit = Boolean(game && isAcceptedMember(memberships, game.collectionId))
+
   if (loading) {
     return (
       <section>
@@ -60,12 +64,12 @@ export function LogPlayPage() {
     )
   }
 
-  if (!user) {
+  if (!canEdit) {
     return (
       <section>
         <h1>Log play</h1>
         <p className="hint">
-          Sign in as the owner to log a play. <Link to="/login">Sign in</Link>
+          Sign in as a collection member to log a play. <Link to="/login">Sign in</Link>
         </p>
       </section>
     )
@@ -89,6 +93,7 @@ export function LogPlayPage() {
       <h1>Log play</h1>
       <LogPlayForm
         gameId={game.id}
+        collectionId={game.collectionId}
         gameName={game.name}
         busy={saving}
         error={error}

@@ -9,16 +9,22 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { appUrl } from '../lib/appUrl'
+import { getProfile } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
+import type { Profile } from '../types/profile'
 
 type AuthContextValue = {
   user: User | null
   session: Session | null
+  profile: Profile | null
   loading: boolean
+  profileLoading: boolean
   isConfigured: boolean
+  needsUsername: boolean
+  refreshProfile: () => Promise<Profile | null>
   sendLoginEmail: (email: string) => Promise<void>
   verifyOtp: (email: string, token: string) => Promise<void>
-  signInWithPassword: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -30,7 +36,25 @@ function redirectTo() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(Boolean(supabase))
+  const [profileLoading, setProfileLoading] = useState(false)
+
+  const loadProfile = useCallback(async (userId: string) => {
+    if (!supabase) return null
+    setProfileLoading(true)
+    try {
+      let row = await getProfile(userId)
+      if (!row) {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+        row = await getProfile(userId)
+      }
+      setProfile(row)
+      return row
+    } finally {
+      setProfileLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!supabase) {
@@ -57,6 +81,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    const userId = session?.user?.id
+    if (!userId) {
+      setProfile(null)
+      setProfileLoading(false)
+      return
+    }
+    void loadProfile(userId).catch(() => {
+      setProfile(null)
+      setProfileLoading(false)
+    })
+  }, [loadProfile, session?.user?.id])
+
+  const refreshProfile = useCallback(async () => {
+    const userId = session?.user?.id
+    if (!userId) return null
+    return loadProfile(userId)
+  }, [loadProfile, session?.user?.id])
+
   const sendLoginEmail = useCallback(async (email: string) => {
     if (!supabase) throw new Error('Supabase is not configured')
     const { error } = await supabase.auth.signInWithOtp({
@@ -79,36 +122,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }, [])
 
-  const signInWithPassword = useCallback(
-    async (email: string, password: string) => {
-      if (!supabase) throw new Error('Supabase is not configured')
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-    },
-    [],
-  )
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) throw new Error('Supabase is not configured')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo(),
+      },
+    })
+    if (error) throw error
+  }, [])
 
   const signOut = useCallback(async () => {
     if (!supabase) throw new Error('Supabase is not configured')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    setProfile(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user: session?.user ?? null,
       session,
+      profile,
       loading,
+      profileLoading,
       isConfigured: Boolean(supabase),
+      needsUsername: Boolean(session?.user) && !profile?.username,
+      refreshProfile,
       sendLoginEmail,
       verifyOtp,
-      signInWithPassword,
+      signInWithGoogle,
       signOut,
     }),
-    [session, loading, sendLoginEmail, verifyOtp, signInWithPassword, signOut],
+    [
+      session,
+      profile,
+      loading,
+      profileLoading,
+      refreshProfile,
+      sendLoginEmail,
+      verifyOtp,
+      signInWithGoogle,
+      signOut,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

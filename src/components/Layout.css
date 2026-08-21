@@ -36,7 +36,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--accent);
+  color: var(--green-ink);
   cursor: pointer;
 }
 
@@ -46,6 +46,12 @@
   gap: 0.55rem;
   text-decoration: none;
   color: var(--text);
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border-radius: 999px;
+}
+
+.owner-chip.is-active {
+  background: var(--green-soft);
 }
 
 .owner-avatar {
@@ -55,6 +61,7 @@
   display: grid;
   place-items: center;
   background: var(--green-soft);
+  border: 1px solid var(--border);
   color: var(--green-ink);
   font-weight: 700;
   font-size: 0.9rem;
@@ -81,15 +88,74 @@
   text-decoration: none;
   font-size: 0.92rem;
   font-weight: 500;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius);
 }
 
-.owner-login:hover {
-  color: var(--accent);
+.owner-login:hover,
+.owner-login.is-active {
+  color: var(--green-ink);
 }
 
-.add-game-btn {
-  min-height: 2.45rem;
-  padding: 0.45rem 0.85rem;
+.owner-login.is-active {
+  background: var(--green-soft);
+  font-weight: 600;
+}
+
+.header-nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius);
+}
+
+.header-nav-link:hover {
+  color: var(--green-ink);
+}
+
+.header-nav-link.is-active {
+  color: var(--green-ink);
+  background: var(--green-soft);
+}
+
+.header-badge {
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--green);
+  color: #f7faf5;
+  font-size: 0.7rem;
+  display: inline-grid;
+  place-items: center;
+}
+
+.invite-banners {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 1.5rem;
+  background: var(--green-soft);
+  border-bottom: 1px solid var(--border);
+}
+
+.invite-banner {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.invite-banner-actions {
+  display: flex;
+  gap: 0.4rem;
 }
 
 .dev-banners {
@@ -148,7 +214,9 @@
     display: flex;
   }
 
-  .app-header-menu .add-game-btn {
+  .header-nav-link,
+  .owner-login,
+  .owner-chip {
     width: 100%;
   }
 }
