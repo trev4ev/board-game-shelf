@@ -48,26 +48,54 @@ A push to `staging` does not deploy from the `staging` ref; it only pings
 Keep production-only hotfixes rare. Prefer fixing on `staging` first, then
 promoting.
 
-### Protect main ruleset (repo owner)
+### Protect main (repo owner)
 
-Agents cannot change rulesets (API 403). Edit
-[Protect main](https://github.com/trev4ev/board-game-shelf/rules/21155803)
-so humans cannot update `main` at all, and only this Action can:
+This is a personal repo. The bypass picker will **not** offer GitHub
+Actions. Eligible bypass actors are repository roles, installed GitHub
+Apps, and (on orgs) teams — not `github-actions[bot]`. The promote
+workflow therefore pushes with a PAT that belongs to you, not with
+`GITHUB_TOKEN`.
 
-1. **Bypass list:** add **GitHub Actions**, bypass mode **Always**. Do
-   not add yourself, Admins, or any other actor. Without this, the
-   promote job’s push to `main` is rejected.
-2. **Rules → Restrict updates:** on. Only bypass actors can move `main`
-   (this blocks direct pushes **and** PR merges).
-3. **Rules → Restrict deletions:** on.
-4. **Rules → Block force pushes:** on (Actions still bypasses).
-5. **Turn off Require a pull request before merging.** That rule is the
-   opposite of this model: it *allows* `main` to move via PRs (including
-   squash commits that are not on `staging`). Squash-only merge methods
-   should go away with it.
+Agents cannot change rulesets or secrets (API 403).
 
-Do not add Repository admin to the bypass list, or admins can still push
-and `main` can drift ahead of `staging`.
+**1. Bypass actor you can actually select**
+
+Edit [Protect main](https://github.com/trev4ev/board-game-shelf/rules/21155803)
+→ **Add bypass** → under Suggestions choose **Repository admin** →
+**Always allow**.
+
+That is the role you already have. A PAT created by you matches it; the
+default Actions token does not.
+
+**2. Fine-grained PAT stored as `PROMOTE_TOKEN`**
+
+1. [Fine-grained tokens](https://github.com/settings/personal-access-tokens)
+   → Generate new token.
+2. Resource owner: your account. Repository access: **Only select
+   repositories** → `board-game-shelf`.
+3. Permissions → **Contents: Read and write**. Nothing else.
+4. Generate, then repo Settings → Secrets and variables → Actions →
+   New repository secret named **`PROMOTE_TOKEN`**.
+
+**3. Other ruleset settings**
+
+1. **Restrict deletions:** on.
+2. **Block force pushes:** on (the PAT still bypasses).
+3. **Turn off Require a pull request before merging.** That rule is
+   meant for a PR-into-main workflow. Squash merges onto `main` create
+   commits that are not on `staging`.
+4. Optional: **Restrict updates** on, so only bypass actors can move
+   `main` (blocks everyone who is not an admin).
+
+Because the bypass identity is **you**, `git push origin HEAD:main` from
+your laptop will also succeed. Do not do that; only run **Promote
+staging to production**. Other people, and agents using `GITHUB_TOKEN`,
+stay blocked.
+
+To lock even the owner out, create a GitHub App, install it on this
+repo, add **that app** (it will appear under Apps in the bypass picker),
+and stop using Repository admin as a bypass. The PAT path above is
+enough for this repo.
 
 ## Database and auth
 

@@ -66,6 +66,9 @@ Required GitHub Actions secrets:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `PROMOTE_TOKEN` — fine-grained PAT (Contents: Read and write) used by
+  **Promote staging to production**. The built-in Actions token cannot
+  bypass Protect main on a personal repo. See `AGENTS.md`.
 
 ### Auth redirects (required)
 
