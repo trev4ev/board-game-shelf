@@ -45,3 +45,84 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  notify-failure:
+    name: Notify deploy failure
+    needs: [build, deploy]
+    if: ${{ always() && contains(join(needs.*.result, ','), 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const label = 'deploy-failure'
+            const title = 'GitHub Pages deploy failed'
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`
+            const sha = context.sha.slice(0, 7)
+            const body = [
+              `The [Deploy GitHub Pages](${runUrl}) workflow failed on \`${sha}\`.`,
+              '',
+              `- Commit: ${context.sha}`,
+              `- Actor: @${context.actor}`,
+              `- Jobs: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`,
+              '',
+              'This issue is reused for later failures so alerts stay in one thread. Close it after the deploy is healthy.',
+            ].join('\n')
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label })
+            } catch (error) {
+              if (error.status !== 404) throw error
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                name: label,
+                color: 'b60205',
+                description: 'GitHub Pages deploy failed',
+              })
+            }
+
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              labels: label,
+              per_page: 10,
+            })
+            const existing = open.find((issue) => issue.title === title) ?? open[0]
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body,
+              })
+              try {
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: existing.number,
+                  assignees: [owner],
+                })
+              } catch (error) {
+                core.warning(`Could not assign ${owner}: ${error.message}`)
+              }
+              return
+            }
+
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body,
+              labels: [label],
+              assignees: [owner],
+            })

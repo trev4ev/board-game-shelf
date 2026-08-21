@@ -33,6 +33,16 @@ Vite proxy (`/api/bgg`). The token stays on the Vite server.
 
 GitHub Actions builds on `main` and deploys to Pages
 (`https://trev4ev.github.io/board-game-shelf/` or the repo’s Pages custom domain).
+A failed deploy opens or comments on a `deploy-failure` GitHub issue (assigned to
+the repo owner), which emails you if Issues notifications are on.
+
+To get GitHub’s own failed-workflow emails (and GitHub Mobile push):
+
+1. Watch this repository (you already do if you own it).
+2. Open [Notification settings](https://github.com/settings/notifications).
+3. Under **System → Actions**, enable **Email** and/or **On GitHub**, and check
+   **Only notify for failed workflows**.
+4. Optional: install [GitHub Mobile](https://github.com/mobile) for push alerts.
 
 Required GitHub Actions secrets:
 

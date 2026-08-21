@@ -92,14 +92,6 @@
 .log-play-people-hint {
   margin: 0 0 0.25rem;
 }
-  font: inherit;
-  font-weight: 400;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-}
 
 .log-play-players {
   margin: 0;
