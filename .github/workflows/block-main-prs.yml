@@ -1,0 +1,17 @@
+# main is a cut of staging, not a merge target. Feature work goes to
+# staging; production is updated by Promote staging to production.
+
+name: Block pull requests into main
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  block:
+    name: Use Promote staging to production
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo '::error::Do not open pull requests into main. Merge into staging, then run the "Promote staging to production" workflow.'
+          exit 1

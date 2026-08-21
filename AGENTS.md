@@ -15,19 +15,17 @@ artifact, built from the `staging` branch.
 | https://trevoraquino.me/board-game-shelf/ | `main` (production) |
 | https://trevoraquino.me/board-game-shelf/staging/ | `staging` |
 
-**Do not push to `main`.** It is PR-only. Never `git push origin HEAD:main`
-or merge locally onto `main`.
+**Never push to `main` and never open a PR into `main`.** Production is
+only updated by the **Promote staging to production** workflow, which
+points `main` at the current `staging` commit. After a promote, `main`
+and `staging` are the same SHA, so `main` cannot get ahead of `staging`.
 
-If a direct push to `main` still succeeds, the repo owner needs to turn
-on branch protection (agents cannot: the API returns 403). Settings →
-Rules → Rulesets → New branch ruleset targeting `main`: require a pull
-request (0 approvals is fine), block force pushes and deletions, and do
-not add bypass actors.
+Never `git push origin HEAD:main`, never merge locally onto `main`, and
+never retarget a feature PR at `main`.
 
 ### Ship a change to staging
 
-1. Branch from `origin/staging` (not `main`, unless staging is behind and
-   you intend to reset).
+1. Branch from `origin/staging` (not `main`).
 2. Implement, commit, push the feature branch.
 3. Open a PR **into `staging`**, not `main`.
 4. After it merges, a push to `staging` triggers **Trigger staging Pages
@@ -40,13 +38,37 @@ A push to `staging` does not deploy from the `staging` ref; it only pings
 
 ### Promote staging to production
 
-1. Open a PR **from `staging` into `main`**.
-2. Merge it (do not fast-forward on the remote by pushing to `main`).
-3. The merge to `main` runs **Deploy GitHub Pages** and updates production.
-   Staging is rebuilt from `staging` in the same run, so it stays in sync.
+1. Actions → **Promote staging to production** → Run workflow.
+2. Use workflow from **`staging`** (required until the workflow itself
+   has been promoted once).
+3. Type `promote` in the confirm field.
+4. The job fast-forwards `main` to `origin/staging`, then dispatches
+   **Deploy GitHub Pages**.
 
 Keep production-only hotfixes rare. Prefer fixing on `staging` first, then
 promoting.
+
+### Protect main (repo owner)
+
+Promote uses the default Actions token. That token **cannot** bypass a
+“require a pull request” rule on a personal repo (GitHub Actions does
+not appear in the bypass picker). Agents cannot edit rulesets (API 403).
+
+Edit [Protect main](https://github.com/trev4ev/board-game-shelf/rules/21155803):
+
+1. **Turn off Require a pull request before merging.** Leave it on and
+   the promote push is rejected.
+2. **Do not enable Restrict updates.** That also blocks `GITHUB_TOKEN`.
+3. Keep **Restrict deletions** and **Block force pushes**.
+4. Leave the bypass list empty. No PAT and no extra secret.
+
+Promote only fast-forwards: `staging` must already contain every commit
+on `main`. After a successful run they are the same SHA.
+
+Anyone with write access can still push to `main` (including other
+Actions jobs). Do not do that. Never open a PR into `main`. The
+**Block pull requests into main** check fails those PRs; it is not a
+required check unless you add it.
 
 ## Database and auth
 
