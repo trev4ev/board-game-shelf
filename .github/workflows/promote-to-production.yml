@@ -1,0 +1,77 @@
+# Cut production (`main`) to the current tip of `staging`.
+#
+# `main` is not updated by PRs or human pushes. After this job runs,
+# `main` and `staging` point at the same commit. GitHub Pages then
+# publishes from that commit (production at the site root, staging
+# under /staging/).
+#
+# GITHUB_TOKEN pushes do not trigger other `on.push` workflows, so this
+# job also dispatches Deploy GitHub Pages.
+#
+# The Protect main ruleset must allow GitHub Actions to bypass (see
+# AGENTS.md). Without that, the push to main is rejected.
+
+name: Promote staging to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "promote" to point main at the current staging commit'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: promote-to-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm promote
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRM" != "promote" ]; then
+            echo '::error::Type "promote" in the confirm input to cut main from staging.'
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Point main at staging
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch origin staging main
+          STAGING_SHA=$(git rev-parse origin/staging)
+          MAIN_SHA=$(git rev-parse origin/main)
+          echo "staging=$STAGING_SHA"
+          echo "main=$MAIN_SHA"
+          if [ "$STAGING_SHA" = "$MAIN_SHA" ]; then
+            echo "main already matches staging; nothing to push."
+          else
+            if ! git push --force-with-lease="refs/heads/main:$MAIN_SHA" \
+              origin "$STAGING_SHA:refs/heads/main"; then
+              echo "::error::Push to main was rejected. On the Protect main ruleset: add GitHub Actions as a bypass actor (always), enable Restrict updates, and turn off Require a pull request. See AGENTS.md."
+              exit 1
+            fi
+          fi
+
+      - name: Deploy GitHub Pages from the new main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run "Deploy GitHub Pages" --ref main

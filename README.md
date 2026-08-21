@@ -37,10 +37,11 @@ allows deploys from `main`, so each deploy rebuilds both apps:
 - Production (`main`): https://trevoraquino.me/board-game-shelf/
 - Staging (`staging` branch): https://trevoraquino.me/board-game-shelf/staging/
 
-`main` is pull-request-only (no direct pushes). Merge feature work into
-`staging` first; that push retriggers a Pages deploy on `main`, which
-picks up the latest `staging` branch. Promote to production with a PR
-from `staging` into `main`.
+Never push to `main` and never open a PR into `main`. Merge feature work
+into `staging` first; that push retriggers a Pages deploy on `main`, which
+picks up the latest `staging` branch. Promote to production by running
+the **Promote staging to production** workflow, which points `main` at
+the current `staging` commit.
 
 See `AGENTS.md` for the agent workflow.
 
