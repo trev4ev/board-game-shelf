@@ -8,6 +8,7 @@ import { isStagingDeploy } from '../lib/deployEnv'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Brand } from './Brand'
 import { Button } from './Button'
+import { EnvToggle } from './EnvToggle'
 import './Layout.css'
 
 function initials(label: string | undefined) {
@@ -190,6 +191,7 @@ export function Layout() {
         <main className="app-main">
           <Outlet />
         </main>
+        <EnvToggle />
       </div>
     </CollectionProvider>
   )

@@ -1,0 +1,46 @@
+.env-toggle {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right));
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  z-index: 90;
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgb(59 36 88 / 0.16);
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.env-toggle-label,
+.env-toggle-opt {
+  display: grid;
+  place-items: center;
+  padding: 0.5rem 0.8rem;
+  min-height: 2.35rem;
+}
+
+.env-toggle-label {
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
+  padding-right: 0.65rem;
+}
+
+.env-toggle-opt {
+  color: var(--text-muted);
+  text-decoration: none;
+  background: transparent;
+}
+
+a.env-toggle-opt:hover {
+  background: var(--green-soft);
+  color: var(--green-ink);
+}
+
+.env-toggle-opt.is-current {
+  background: #efe3c9;
+  color: var(--green-ink);
+}
