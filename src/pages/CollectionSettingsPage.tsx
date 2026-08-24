@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button } from '../components/Button'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import {
   canRemoveCollectionMember,
   deleteCollection,
@@ -21,6 +22,60 @@ import { usernameSearchMessage, useUsernameSearch } from '../lib/useUsernameSear
 import type { Collection, CollectionMember } from '../types/collection'
 import './CollectionSettingsPage.css'
 
+type PendingConfirm =
+  | { type: 'regenerateInvite' }
+  | { type: 'removeMember'; member: CollectionMember }
+  | { type: 'deleteCollection' }
+
+function confirmCopy(
+  pending: PendingConfirm,
+  userId: string,
+  collectionName: string,
+) {
+  switch (pending.type) {
+    case 'regenerateInvite':
+      return {
+        title: 'Replace invite link?',
+        description: 'The old link will stop working.',
+        confirmLabel: 'Replace link',
+        danger: false,
+      }
+    case 'removeMember': {
+      const self = pending.member.userId === userId
+      const label = pending.member.username ?? 'this member'
+      if (self) {
+        return {
+          title: 'Leave collection?',
+          description: 'You will lose edit access.',
+          confirmLabel: 'Leave',
+          danger: true,
+        }
+      }
+      if (pending.member.status === 'pending') {
+        return {
+          title: 'Cancel invite?',
+          description: `${label} will not be added as a co-owner.`,
+          confirmLabel: 'Cancel invite',
+          danger: false,
+        }
+      }
+      return {
+        title: 'Remove member?',
+        description: `Remove ${label} from this collection?`,
+        confirmLabel: 'Remove',
+        danger: true,
+      }
+    }
+    case 'deleteCollection':
+      return {
+        title: 'Delete collection?',
+        description: `${collectionName} and its games and plays will be removed.`,
+        confirmLabel: 'Delete collection',
+        danger: true,
+      }
+  }
+}
+
 export function CollectionSettingsPage() {
   const { collectionId } = useParams()
   const { user } = useAuth()
@@ -35,6 +90,7 @@ export function CollectionSettingsPage() {
   const [hint, setHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<PendingConfirm | null>(null)
   const { hits: suggestions, status: searchStatus } = useUsernameSearch(invite, user?.id)
 
   useEffect(() => {
@@ -109,16 +165,8 @@ export function CollectionSettingsPage() {
     }
   }
 
-  async function onRegenerateInviteLink() {
+  async function regenerateInvite() {
     if (!collectionId) return
-    if (
-      inviteToken &&
-      !window.confirm(
-        'Replace the invite link? The old link will stop working.',
-      )
-    ) {
-      return
-    }
     setBusy(true)
     setError(null)
     try {
@@ -130,6 +178,15 @@ export function CollectionSettingsPage() {
     } finally {
       setBusy(false)
     }
+  }
+
+  function onRegenerateInviteLink() {
+    if (!collectionId) return
+    if (inviteToken) {
+      setConfirmAction({ type: 'regenerateInvite' })
+      return
+    }
+    void regenerateInvite()
   }
 
   async function onInvite(event: FormEvent) {
@@ -149,19 +206,9 @@ export function CollectionSettingsPage() {
     }
   }
 
-  async function onRemove(member: CollectionMember) {
+  async function removeMember(member: CollectionMember) {
     if (!collectionId || !user) return
     const self = member.userId === user.id
-    const label = member.username ?? 'this member'
-    if (
-      !window.confirm(
-        self
-          ? 'Leave this collection? You will lose edit access.'
-          : `Remove ${label} from this collection?`,
-      )
-    ) {
-      return
-    }
     setBusy(true)
     setError(null)
     try {
@@ -180,15 +227,8 @@ export function CollectionSettingsPage() {
     }
   }
 
-  async function onDelete() {
-    if (!collectionId || !collection) return
-    if (
-      !window.confirm(
-        `Delete ${collection.name}? Games and plays in this collection will be removed.`,
-      )
-    ) {
-      return
-    }
+  async function deleteShelf() {
+    if (!collectionId) return
     setBusy(true)
     setError(null)
     try {
@@ -199,6 +239,15 @@ export function CollectionSettingsPage() {
       setError(err instanceof Error ? err.message : 'Could not delete collection')
       setBusy(false)
     }
+  }
+
+  async function onConfirmPending() {
+    if (!confirmAction || busy) return
+    const current = confirmAction
+    setConfirmAction(null)
+    if (current.type === 'regenerateInvite') await regenerateInvite()
+    else if (current.type === 'removeMember') await removeMember(current.member)
+    else await deleteShelf()
   }
 
   if (loading) {
@@ -234,6 +283,9 @@ export function CollectionSettingsPage() {
   const accepted = members.filter((member) => member.status === 'accepted')
   const pending = members.filter((member) => member.status === 'pending')
   const searchMessage = usernameSearchMessage(invite, searchStatus)
+  const confirm = confirmAction
+    ? confirmCopy(confirmAction, user.id, collection.name)
+    : null
 
   return (
     <section className="settings-page">
@@ -403,7 +455,7 @@ export function CollectionSettingsPage() {
                 {canRemove ? (
                   <Button
                     variant="ghost"
-                    onClick={() => void onRemove(member)}
+                    onClick={() => setConfirmAction({ type: 'removeMember', member })}
                     disabled={busy}
                   >
                     {self ? 'Leave' : 'Remove'}
@@ -424,7 +476,7 @@ export function CollectionSettingsPage() {
                   <span>{member.username ?? 'Unknown'}</span>
                   <Button
                     variant="ghost"
-                    onClick={() => void onRemove(member)}
+                    onClick={() => setConfirmAction({ type: 'removeMember', member })}
                     disabled={busy}
                   >
                     Cancel
@@ -439,10 +491,27 @@ export function CollectionSettingsPage() {
       <div className="settings-form danger">
         <h2>Delete collection</h2>
         <p className="hint">This removes the games and play history on this shelf.</p>
-        <Button variant="secondary" onClick={() => void onDelete()} disabled={busy}>
+        <Button
+          variant="secondary"
+          onClick={() => setConfirmAction({ type: 'deleteCollection' })}
+          disabled={busy}
+        >
           Delete collection
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        description={confirm?.description ?? ''}
+        confirmLabel={confirm?.confirmLabel ?? 'Confirm'}
+        danger={confirm?.danger ?? false}
+        busy={busy}
+        onConfirm={() => void onConfirmPending()}
+        onCancel={() => {
+          if (!busy) setConfirmAction(null)
+        }}
+      />
     </section>
   )
 }

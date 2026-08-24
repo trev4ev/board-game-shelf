@@ -101,6 +101,17 @@
   border-color: #c5d4bf;
 }
 
+.btn-danger {
+  background: #fff;
+  color: #8b1e1e;
+  border-color: #c98a8a;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #fdf2f2;
+  border-color: #c98a8a;
+}
+
 .btn-ghost,
 .text-button {
   font: inherit;
