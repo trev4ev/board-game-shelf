@@ -50,6 +50,26 @@ export async function createGame(
   return rowToGame(data as GameRow)
 }
 
+export async function createGames(
+  collectionId: string,
+  inputs: GameInput[],
+): Promise<Game[]> {
+  if (inputs.length === 0) return []
+  const client = requireClient()
+  const { data, error } = await client
+    .from('games')
+    .insert(
+      inputs.map((input) => ({
+        ...gameInputToRow(input),
+        collection_id: collectionId,
+      })),
+    )
+    .select('*')
+
+  if (error) throw error
+  return ((data ?? []) as GameRow[]).map(rowToGame)
+}
+
 export async function replaceGame(id: string, input: GameInput): Promise<Game> {
   const client = requireClient()
   const { data, error } = await client

@@ -2,6 +2,7 @@ export {
   listGames,
   getGame,
   createGame,
+  createGames,
   replaceGame,
   patchGame,
   deleteGame,

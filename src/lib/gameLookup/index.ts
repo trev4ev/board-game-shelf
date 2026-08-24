@@ -8,6 +8,18 @@ export type {
   GameLookupResult,
 } from './types'
 export { GameLookupUnavailableError } from './types'
+export {
+  MIN_MATCH_SCORE,
+  TIE_SCORE_DELTA,
+  normalizeGameName,
+  pickMostPopular,
+  pickNameFinalists,
+  rankNameMatches,
+  scoreNameMatch,
+} from './match'
+export { parseGameNameList } from './parseNames'
+export { matchGameName } from './bulk'
+export type { BulkMatchRow, BulkMatchStatus } from './bulk'
 
 /**
  * Local/dev: Vite `/api/bgg` proxy (token stays on the Vite server).

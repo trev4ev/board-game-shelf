@@ -87,6 +87,7 @@ export function parseThingXml(xml: string): GameLookupDetails {
           ratings?: {
             average?: Record<string, unknown>
             averageweight?: Record<string, unknown>
+            usersrated?: Record<string, unknown>
           }
         }
       | undefined
@@ -109,5 +110,6 @@ export function parseThingXml(xml: string): GameLookupDetails {
     weight: numAttr(ratings?.averageweight),
     thumbnailUrl: ensureHttps(textContent(item.thumbnail)),
     imageUrl: ensureHttps(textContent(item.image)),
+    usersRated: numAttr(ratings?.usersrated),
   }
 }
