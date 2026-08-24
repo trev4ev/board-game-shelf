@@ -17,6 +17,9 @@ export function isSafeReturnTo(path: string) {
   if (path === '/login' || path.startsWith('/login?') || path.startsWith('/login#')) {
     return false
   }
+  if (path === '/onboarding' || path.startsWith('/onboarding?') || path.startsWith('/onboarding#')) {
+    return false
+  }
   return true
 }
 
