@@ -28,17 +28,17 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="invite/:token" element={<InvitePage />} />
+            <Route path="c/:collectionId" element={<CollectionPage />} />
+            <Route path="games/:id" element={<GameDetailPage />} />
             <Route element={<RequireUsername />}>
               <Route index element={<HomePage />} />
               <Route path="friends" element={<FriendsPage />} />
-              <Route path="c/:collectionId" element={<CollectionPage />} />
               <Route path="c/:collectionId/settings" element={<CollectionSettingsPage />} />
               <Route path="c/:collectionId/games/new" element={<AddGameLayout />}>
                 <Route index element={<AddGameSearchPage />} />
                 <Route path="review" element={<AddGameReviewPage />} />
               </Route>
               <Route path="games/new" element={<GamesNewRedirect />} />
-              <Route path="games/:id" element={<GameDetailPage />} />
               <Route path="games/:id/play" element={<LogPlayPage />} />
               <Route path="games/:id/edit" element={<EditGamePage />} />
             </Route>

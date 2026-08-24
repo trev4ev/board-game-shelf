@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { rememberReturnTo } from '../lib/postAuth'
 import { useAuth } from './AuthProvider'
 
 export function RequireUsername() {
@@ -14,6 +15,7 @@ export function RequireUsername() {
   }
 
   if (user && needsUsername && location.pathname !== '/onboarding') {
+    rememberReturnTo(`${location.pathname}${location.search}`)
     return <Navigate to="/onboarding" replace />
   }
 

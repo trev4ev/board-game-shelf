@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(Boolean(supabase))
-  const [profileLoading, setProfileLoading] = useState(false)
+  // Start true whenever a session might still be in localStorage so we never
+  // treat "user, but profile not fetched yet" as "needs a username".
+  const [profileLoading, setProfileLoading] = useState(Boolean(supabase))
 
   const loadProfile = useCallback(async (userId: string) => {
     if (!supabase) return null
@@ -60,20 +62,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!supabase) {
       setLoading(false)
+      setProfileLoading(false)
       return
     }
 
     let mounted = true
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setSession(data.session)
-        setLoading(false)
+    let currentUserId: string | undefined
+
+    function applySession(next: Session | null) {
+      if (!mounted) return
+      const nextId = next?.user?.id
+      setSession(next)
+      setLoading(false)
+      if (!nextId) {
+        currentUserId = undefined
+        setProfile(null)
+        setProfileLoading(false)
+        return
       }
+      if (nextId !== currentUserId) {
+        currentUserId = nextId
+        setProfileLoading(true)
+      }
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      applySession(data.session)
     })
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next)
-      setLoading(false)
+      applySession(next)
     })
 
     return () => {
@@ -157,7 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       profileLoading,
       isConfigured: Boolean(supabase),
-      needsUsername: Boolean(session?.user) && !profile?.username,
+      needsUsername:
+        Boolean(session?.user) && !loading && !profileLoading && !profile?.username,
       refreshProfile,
       sendLoginEmail,
       verifyOtp,
