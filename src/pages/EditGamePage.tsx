@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCollections } from '../auth/CollectionProvider'
+import { Button } from '../components/Button'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { GameForm } from '../components/GameForm'
 import { isAcceptedMember } from '../lib/collections'
 import { deleteGame, getGame, gameToInput, replaceGame } from '../lib/games'
@@ -18,6 +20,7 @@ export function EditGamePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -64,10 +67,7 @@ export function EditGamePage() {
   }
 
   async function onDelete() {
-    if (!id) return
-    if (!window.confirm(`Delete ${name || 'this game'} from the collection?`)) {
-      return
-    }
+    if (!id || deleting) return
     setDeleting(true)
     setError(null)
     try {
@@ -76,6 +76,7 @@ export function EditGamePage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed')
       setDeleting(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -137,14 +138,27 @@ export function EditGamePage() {
         submitLabel="Save changes"
         busy={saving || deleting}
       />
-      <button
+      <Button
         type="button"
+        variant="danger"
         className="delete-button"
-        onClick={onDelete}
+        onClick={() => setConfirmDelete(true)}
         disabled={saving || deleting}
       >
         {deleting ? 'Deleting…' : 'Delete game'}
-      </button>
+      </Button>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete game?"
+        description={`Delete ${name || 'this game'} from the collection?`}
+        confirmLabel={deleting ? 'Deleting…' : 'Delete game'}
+        danger
+        busy={saving || deleting}
+        onConfirm={() => void onDelete()}
+        onCancel={() => {
+          if (!saving && !deleting) setConfirmDelete(false)
+        }}
+      />
     </section>
   )
 }

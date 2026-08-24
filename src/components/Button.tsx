@@ -1,7 +1,13 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'accent' | 'ghost'
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'accent'
+  | 'ghost'
+  | 'danger'
 
 function buttonClass(
   variant: ButtonVariant = 'primary',
