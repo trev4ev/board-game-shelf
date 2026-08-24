@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { FlaskConical, Globe } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import {
   isStagingDeploy,
@@ -7,29 +8,6 @@ import {
   siblingDeployUrl,
 } from '../lib/deployEnv'
 import './EnvToggle.css'
-
-function EnvOption({
-  current,
-  href,
-  children,
-}: {
-  current: boolean
-  href: string
-  children: string
-}) {
-  if (current) {
-    return (
-      <span className="env-toggle-opt is-current" aria-current="true">
-        {children}
-      </span>
-    )
-  }
-  return (
-    <a className="env-toggle-opt" href={href}>
-      {children}
-    </a>
-  )
-}
 
 export function EnvToggle() {
   const { user } = useAuth()
@@ -41,17 +19,18 @@ export function EnvToggle() {
   if (!showOwnerEnvToggle(user?.email)) return null
 
   const staging = isStagingDeploy()
-  const local = import.meta.env.DEV
+  const href = siblingDeployUrl(staging ? 'production' : 'staging')
+  const label = staging ? 'Open this page on production' : 'Open this page on staging'
+  const Icon = staging ? FlaskConical : Globe
 
   return (
-    <div className="env-toggle" role="group" aria-label="Switch site environment">
-      {local ? <span className="env-toggle-label">Local</span> : null}
-      <EnvOption current={!staging && !local} href={siblingDeployUrl('production')}>
-        Prod
-      </EnvOption>
-      <EnvOption current={staging} href={siblingDeployUrl('staging')}>
-        Staging
-      </EnvOption>
-    </div>
+    <a
+      className={staging ? 'env-toggle is-staging' : 'env-toggle is-production'}
+      href={href}
+      aria-label={label}
+      title={label}
+    >
+      <Icon size={20} strokeWidth={2.25} aria-hidden />
+    </a>
   )
 }
