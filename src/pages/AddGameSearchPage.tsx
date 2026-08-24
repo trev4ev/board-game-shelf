@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { ListPlus } from 'lucide-react'
+import { ButtonLink } from '../components/Button'
 import { GameForm } from '../components/GameForm'
 import { isBggLookupEnabled } from '../lib/gameLookup'
 import { useAddGame } from './AddGameLayout'
@@ -8,6 +10,7 @@ export function AddGameSearchPage() {
   const {
     user,
     isMember,
+    collectionId,
     isDesktop,
     query,
     setQuery,
@@ -27,7 +30,18 @@ export function AddGameSearchPage() {
 
   return (
     <section>
-      <h1>Add game</h1>
+      <div className="add-game-heading-row">
+        <h1>Add game</h1>
+        {collectionId && (
+          <ButtonLink
+            to={`/c/${collectionId}/games/new/bulk`}
+            variant="secondary"
+          >
+            <ListPlus size={16} strokeWidth={2.25} aria-hidden />
+            Bulk add
+          </ButtonLink>
+        )}
+      </div>
 
       {!user && (
         <p className="hint">

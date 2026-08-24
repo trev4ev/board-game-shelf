@@ -27,6 +27,8 @@ export type GameLookupDetails = {
   weight: number | null
   thumbnailUrl: string | null
   imageUrl: string | null
+  /** BGG usersrated — popularity proxy; search does not include this */
+  usersRated: number | null
 }
 
 export interface GameLookup {

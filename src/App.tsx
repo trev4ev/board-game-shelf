@@ -6,6 +6,7 @@ import { Layout } from './components/Layout'
 import { AddGameLayout } from './pages/AddGameLayout'
 import { AddGameReviewPage } from './pages/AddGameReviewPage'
 import { AddGameSearchPage } from './pages/AddGameSearchPage'
+import { BulkAddGamesPage } from './pages/BulkAddGamesPage'
 import { CollectionPage } from './pages/CollectionPage'
 import { CollectionSettingsPage } from './pages/CollectionSettingsPage'
 import { EditGamePage } from './pages/EditGamePage'
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="c/:collectionId/games/new" element={<AddGameLayout />}>
                 <Route index element={<AddGameSearchPage />} />
                 <Route path="review" element={<AddGameReviewPage />} />
+                <Route path="bulk" element={<BulkAddGamesPage />} />
               </Route>
               <Route path="games/new" element={<GamesNewRedirect />} />
               <Route path="games/:id/play" element={<LogPlayPage />} />
