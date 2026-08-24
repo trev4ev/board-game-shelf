@@ -70,6 +70,11 @@
   margin: 0;
 }
 
+.collection-browse-note {
+  margin: 0.35rem 0 0;
+  max-width: 36rem;
+}
+
 .collection-hero h1 {
   margin-bottom: 0;
 }
@@ -86,6 +91,7 @@
   padding: 0.45rem 0.85rem;
 }
 
+.collection-share-link,
 .collection-settings-link {
   display: inline-flex;
   align-items: center;
@@ -94,8 +100,14 @@
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
+.collection-share-link:hover,
 .collection-settings-link:hover {
   color: var(--green-ink);
 }

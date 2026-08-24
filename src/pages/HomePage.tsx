@@ -87,7 +87,8 @@ export function HomePage() {
           Sign in to create a collection, invite co-owners, and tag friends.
         </p>
         <p className="hint">
-          Guests can still browse a collection if someone shares the link.
+          Anyone with a collection link can browse without signing in. Use Copy
+          link on a shelf — the home page is each person's own collections.
         </p>
         <div className="home-actions">
           <ButtonLink to="/login" variant="primary">
