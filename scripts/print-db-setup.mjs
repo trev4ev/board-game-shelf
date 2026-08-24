@@ -13,9 +13,14 @@ Board Game Shelf — database setup
 
 3. Authentication → Providers:
    - Enable Email
+   - Confirm email can stay on; the prepare-email-login Edge Function marks
+     first-time OTP users confirmed so they get a magic code, not a
+     "confirm your email" link. (OTP is the proof they own the inbox.)
    - Enable Google (Web client ID/secret from Google Cloud). Redirect URI:
      https://cfzssslioogdnjyuxpvu.supabase.co/auth/v1/callback
-   Add local and GitHub Pages /login URLs under Authentication → URL Configuration.
+   Site URL should be the production app
+   (https://trevoraquino.me/board-game-shelf/). Add local, production, and
+   staging /login URLs under Authentication → URL Configuration.
 
 4. In the app: Sign in → choose a username → add games to your collection
 `)

@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { routerBasename } from './lib/appUrl'
 import { AuthProvider } from './auth/AuthProvider'
 import { RequireUsername } from './auth/RequireUsername'
@@ -16,6 +16,7 @@ import { HomePage } from './pages/HomePage'
 import { InvitePage } from './pages/InvitePage'
 import { LoginPage } from './pages/LoginPage'
 import { LogPlayPage } from './pages/LogPlayPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 
 export default function App() {
@@ -41,7 +42,7 @@ export default function App() {
               <Route path="games/:id/play" element={<LogPlayPage />} />
               <Route path="games/:id/edit" element={<EditGamePage />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

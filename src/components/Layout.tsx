@@ -113,8 +113,14 @@ function HeaderNav() {
                 </NavLink>
               </>
             ) : (
-              <NavLink
-                to="/login"
+                <NavLink
+                to={
+                  pathIn(location.pathname, '/login')
+                    ? '/login'
+                    : `/login?next=${encodeURIComponent(
+                        `${location.pathname}${location.search}`,
+                      )}`
+                }
                 className={navClass(accountActive, 'owner-login')}
                 aria-current={accountActive ? 'page' : undefined}
               >

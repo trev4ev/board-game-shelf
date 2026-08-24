@@ -16,6 +16,7 @@ import {
   renameCollection,
 } from '../lib/collections'
 import { appUrl } from '../lib/appUrl'
+import { copyText } from '../lib/copyText'
 import { usernameSearchMessage, useUsernameSearch } from '../lib/useUsernameSearch'
 import type { Collection, CollectionMember } from '../types/collection'
 import './CollectionSettingsPage.css'
@@ -88,12 +89,22 @@ export function CollectionSettingsPage() {
 
   async function onCopyInviteLink() {
     if (!inviteToken) return
-    const url = appUrl(`invite/${inviteToken}`)
-    try {
-      await navigator.clipboard.writeText(url)
+    const copied = await copyText(appUrl(`invite/${inviteToken}`))
+    if (copied) {
       setHint('Invite link copied')
       setError(null)
-    } catch {
+    } else {
+      setError('Could not copy. Select the link and copy it yourself.')
+    }
+  }
+
+  async function onCopyBrowseLink() {
+    if (!collectionId) return
+    const copied = await copyText(appUrl(`c/${collectionId}`))
+    if (copied) {
+      setHint('Collection link copied')
+      setError(null)
+    } else {
       setError('Could not copy. Select the link and copy it yourself.')
     }
   }
@@ -250,10 +261,38 @@ export function CollectionSettingsPage() {
       </form>
 
       <div className="settings-form">
+        <h2>Share collection</h2>
+        <p className="hint">
+          Anyone with this link can browse, filter, and pick a game. They do
+          not become a member.
+        </p>
+        <label>
+          Browse link
+          <input
+            value={appUrl(`c/${collectionId}`)}
+            readOnly
+            onFocus={(event) => event.currentTarget.select()}
+          />
+        </label>
+        <div className="invite-link-actions">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void onCopyBrowseLink()}
+            disabled={busy}
+          >
+            Copy browse link
+          </Button>
+        </div>
+      </div>
+
+      <div className="settings-form">
         <h2>Invite link</h2>
         <p className="hint">
           Anyone with this link can join as a co-owner after they sign in. New
           users will create an account, choose a username, and then be added.
+          Use this only when you want them to edit the shelf — not for
+          browsing.
         </p>
         {inviteToken ? (
           <>
@@ -272,7 +311,7 @@ export function CollectionSettingsPage() {
                 onClick={() => void onCopyInviteLink()}
                 disabled={busy}
               >
-                Copy link
+                Copy invite link
               </Button>
               <Button
                 type="button"

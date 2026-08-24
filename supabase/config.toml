@@ -3,3 +3,6 @@ project_id = "cfzssslioogdnjyuxpvu"
 
 [functions.bgg]
 verify_jwt = true
+
+[functions.prepare-email-login]
+verify_jwt = false

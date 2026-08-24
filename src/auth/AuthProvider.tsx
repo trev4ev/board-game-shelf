@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { appUrl } from '../lib/appUrl'
+import { prepareEmailLogin } from '../lib/prepareEmailLogin'
 import { getProfile } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types/profile'
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendLoginEmail = useCallback(async (email: string) => {
     if (!supabase) throw new Error('Supabase is not configured')
+    await prepareEmailLogin(email)
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -114,12 +116,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyOtp = useCallback(async (email: string, token: string) => {
     if (!supabase) throw new Error('Supabase is not configured')
-    const { error } = await supabase.auth.verifyOtp({
+    const cleaned = token.trim()
+    const first = await supabase.auth.verifyOtp({
       email,
-      token,
+      token: cleaned,
       type: 'email',
     })
-    if (error) throw error
+    if (!first.error) return
+    const second = await supabase.auth.verifyOtp({
+      email,
+      token: cleaned,
+      type: 'signup',
+    })
+    if (second.error) throw first.error
   }, [])
 
   const signInWithGoogle = useCallback(async () => {

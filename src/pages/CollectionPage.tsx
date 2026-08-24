@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Brain, Clock, Dices, Plus, Settings, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Brain, Clock, Dices, Link2, Plus, Settings, SlidersHorizontal, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button, ButtonLink } from '../components/Button'
@@ -9,7 +9,9 @@ import { GameRow } from '../components/GameRow'
 import { RangeSlider } from '../components/RangeSlider'
 import { SearchField } from '../components/SearchField'
 import { Toggle } from '../components/Toggle'
+import { appUrl } from '../lib/appUrl'
 import { getCollection } from '../lib/collections'
+import { copyText } from '../lib/copyText'
 import {
   applicableCategories,
   COMPLEXITY_SLIDER_STEP,
@@ -50,6 +52,7 @@ export function CollectionPage() {
   const [filters, setFilters] = useState<GameFilters>(emptyFilters)
   const [picked, setPicked] = useState<Game | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [copyHint, setCopyHint] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -118,6 +121,12 @@ export function CollectionPage() {
     if (game) dialogRef.current?.showModal()
   }
 
+  async function onCopyCollectionLink() {
+    if (!collectionId) return
+    const copied = await copyText(appUrl(`c/${collectionId}`))
+    setCopyHint(copied ? 'Link copied' : 'Could not copy. Copy the URL from the address bar.')
+  }
+
   return (
     <section className="collection-page">
       <div className="collection-layout">
@@ -129,21 +138,41 @@ export function CollectionPage() {
                 <Link to="/">← Collections</Link>
               </p>
               <h1>{collection?.name ?? 'Game collection'}</h1>
+              {toolsReady && collection && !isMember ? (
+                <p className="hint collection-browse-note">
+                  {user
+                    ? 'You can browse this shelf. Members can add games and log plays.'
+                    : 'Anyone with this link can browse. Sign in only if you want your own collection or a member invite.'}
+                </p>
+              ) : null}
+              {copyHint ? <p className="hint collection-browse-note">{copyHint}</p> : null}
             </div>
-            {isMember && collectionId ? (
+            {collectionId ? (
               <div className="collection-hero-actions">
-                <ButtonLink
-                  to={`/c/${collectionId}/games/new`}
-                  variant="accent"
-                  className="add-game-btn"
+                <button
+                  type="button"
+                  className="collection-share-link"
+                  onClick={() => void onCopyCollectionLink()}
                 >
-                  <Plus size={16} strokeWidth={2.25} aria-hidden />
-                  Add game
-                </ButtonLink>
-                <Link to={`/c/${collectionId}/settings`} className="collection-settings-link">
-                  <Settings size={16} strokeWidth={2} aria-hidden />
-                  Settings
-                </Link>
+                  <Link2 size={16} strokeWidth={2} aria-hidden />
+                  Copy link
+                </button>
+                {isMember ? (
+                  <>
+                    <ButtonLink
+                      to={`/c/${collectionId}/games/new`}
+                      variant="accent"
+                      className="add-game-btn"
+                    >
+                      <Plus size={16} strokeWidth={2.25} aria-hidden />
+                      Add game
+                    </ButtonLink>
+                    <Link to={`/c/${collectionId}/settings`} className="collection-settings-link">
+                      <Settings size={16} strokeWidth={2} aria-hidden />
+                      Settings
+                    </Link>
+                  </>
+                ) : null}
               </div>
             ) : null}
           </div>

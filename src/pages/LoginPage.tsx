@@ -2,7 +2,13 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Button } from '../components/Button'
-import { nextPathAfterAuth, peekPendingInvite, rememberPendingInvite } from '../lib/pendingInvite'
+import {
+  consumePathAfterAuth,
+  nextPathAfterAuth,
+  peekPendingInvite,
+  rememberPendingInvite,
+} from '../lib/pendingInvite'
+import { rememberReturnTo, returnToFromSearch, peekReturnTo, clearReturnTo } from '../lib/postAuth'
 import './LoginPage.css'
 
 function GoogleMark() {
@@ -54,12 +60,13 @@ export function LoginPage() {
   useEffect(() => {
     const token = searchParams.get('invite')
     if (token) rememberPendingInvite(token)
+    rememberReturnTo(returnToFromSearch(searchParams.get('next')))
   }, [searchParams])
 
   useEffect(() => {
     if (!user || loading || profileLoading) return
     if (!peekPendingInvite()) return
-    navigate(nextPathAfterAuth(needsUsername), { replace: true })
+    navigate(consumePathAfterAuth(needsUsername), { replace: true })
   }, [loading, navigate, needsUsername, profileLoading, user])
 
   function emailValue() {
@@ -93,7 +100,7 @@ export function LoginPage() {
     setBusy(true)
     try {
       await verifyOtp(emailValue(), otp.trim())
-      navigate(nextPathAfterAuth(needsUsername))
+      navigate(consumePathAfterAuth(needsUsername))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid or expired code')
     } finally {
@@ -148,12 +155,22 @@ export function LoginPage() {
           )}
         </p>
         <div className="auth-actions">
-          <Link to={nextPathAfterAuth(needsUsername)} className="button-link">
+          <Link
+            to={nextPathAfterAuth(needsUsername)}
+            className="button-link"
+            onClick={() => {
+              if (!needsUsername) clearReturnTo()
+            }}
+          >
             {needsUsername
               ? 'Choose a username'
               : joiningInvite
                 ? 'Join collection'
-                : 'Your collections'}
+                : peekReturnTo()?.startsWith('/c/')
+                  ? 'Continue to collection'
+                  : peekReturnTo()
+                    ? 'Continue'
+                    : 'Your collections'}
           </Link>
           <button
             type="button"

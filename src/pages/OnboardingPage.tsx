@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button } from '../components/Button'
 import { ensureDefaultCollection } from '../lib/collections'
-import { nextPathAfterAuth, peekPendingInvite } from '../lib/pendingInvite'
+import { consumePathAfterAuth, peekPendingInvite } from '../lib/pendingInvite'
 import { setUsername } from '../lib/profiles'
 import { USERNAME_MAX, usernameError } from '../lib/username'
 import './LoginPage.css'
@@ -33,7 +33,7 @@ export function OnboardingPage() {
   }
 
   if (!needsUsername && profile?.username) {
-    return <Navigate to={nextPathAfterAuth(false)} replace />
+    return <Navigate to={consumePathAfterAuth(false)} replace />
   }
 
   async function onSubmit(event: FormEvent) {
@@ -55,7 +55,7 @@ export function OnboardingPage() {
         }
         await refresh()
       }
-      navigate(nextPathAfterAuth(false))
+      navigate(consumePathAfterAuth(false))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save username')
     } finally {

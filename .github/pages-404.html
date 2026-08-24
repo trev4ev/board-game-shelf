@@ -12,13 +12,22 @@
         } else if (parts[0] === 'staging') {
           keep = 1
         }
+        var rest =
+          '/' +
+          parts.slice(keep).join('/') +
+          window.location.search +
+          window.location.hash
+        try {
+          sessionStorage.setItem('spa-github-pages-path', rest)
+        } catch (e) {}
         var l = window.location
+        var prefix = l.pathname.split('/').slice(0, 1 + keep).join('/')
         l.replace(
           l.protocol +
             '//' +
             l.hostname +
             (l.port ? ':' + l.port : '') +
-            l.pathname.split('/').slice(0, 1 + keep).join('/') +
+            prefix +
             '/?/' +
             l.pathname
               .split('/')
