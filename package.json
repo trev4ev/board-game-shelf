@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "tsx --test src/lib/gameLookup/match.test.ts src/lib/gameLookup/parseNames.test.ts",
+    "test": "tsx --test src/lib/gameLookup/match.test.ts src/lib/gameLookup/parseNames.test.ts src/lib/friendCollections.test.ts",
     "preview": "vite preview",
     "test:bgg": "tsx bgg/test-token.ts",
     "db:setup": "node scripts/print-db-setup.mjs"

@@ -1,10 +1,15 @@
 import { supabase } from './supabase'
 import { listProfilesByIds, findProfileByUsername } from './profiles'
+import {
+  groupFriendCollections,
+  type FriendCollectionRow,
+} from './friendCollections'
 import type {
   Collection,
   CollectionMember,
   CollectionMembership,
   CollectionSummary,
+  FriendCollection,
 } from '../types/collection'
 
 function requireClient() {
@@ -76,6 +81,38 @@ export async function listMyMemberships(
     })
   }
   return memberships
+}
+
+export async function listFriendCollections(
+  friendIds: string[],
+  usernamesById: Map<string, string | null>,
+): Promise<FriendCollection[]> {
+  if (friendIds.length === 0) return []
+  const client = requireClient()
+  const { data, error } = await client
+    .from('collection_members')
+    .select('user_id, collections (*)')
+    .in('user_id', friendIds)
+    .eq('status', 'accepted')
+    .order('created_at', { ascending: true })
+  if (error) throw error
+
+  const rows: FriendCollectionRow[] = []
+  for (const row of (data ?? []) as Array<{
+    user_id: string
+    collections: CollectionRow | CollectionRow[] | null
+  }>) {
+    const collectionRow = Array.isArray(row.collections)
+      ? row.collections[0]
+      : row.collections
+    if (!collectionRow) continue
+    rows.push({
+      userId: row.user_id,
+      username: usernamesById.get(row.user_id) ?? null,
+      collection: rowToCollection(collectionRow),
+    })
+  }
+  return groupFriendCollections(rows)
 }
 
 const PREVIEW_GAMES = 4

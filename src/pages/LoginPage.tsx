@@ -191,7 +191,7 @@ export function LoginPage() {
         Create an account or sign in to{' '}
         {joiningInvite
           ? 'join this collection.'
-          : 'manage your collections, invite co-owners, and tag friends on plays.'}
+          : 'manage your collections, invite co-owners, browse friends’ shelves, and tag friends on plays.'}
       </p>
 
       <form className="auth-form" onSubmit={(event) => void onSendLink(event)}>

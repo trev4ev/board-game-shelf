@@ -21,6 +21,7 @@ Core functionality
 - Browse the filtered list and select a game
 - Randomly pick a game from the current (filtered) results
 - Add friends by username; tag friends or co-owners when logging a play
+- Browse friends' collections from the home page or a friend's profile
 - Guest names (no account) can still be recorded on a play
 - Anyone with a collection URL can browse, filter, and random-pick
 - Mobile-friendly layout for use at the table
