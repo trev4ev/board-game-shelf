@@ -157,6 +157,25 @@ export function FriendCollectionsPage() {
   const displayName = profile?.username ?? username ?? 'Friend'
   const mineIds = new Set(accepted.map((item) => item.collection.id))
 
+  if (!user) {
+    return (
+      <section className="friend-collections-page">
+        <p className="hint collection-back">
+          <Link to="/friends">← Friends</Link>
+        </p>
+        <h1>Friends' collections</h1>
+        <p className="lede">
+          Sign in to browse a friend's shelves.{' '}
+          <Link
+            to={`/login?next=${encodeURIComponent(`/friends/${username ?? ''}`)}`}
+          >
+            Sign in
+          </Link>
+        </p>
+      </section>
+    )
+  }
+
   return (
     <section className="friend-collections-page">
       <p className="hint collection-back">
