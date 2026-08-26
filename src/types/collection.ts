@@ -35,3 +35,8 @@ export type CollectionSummary = {
   memberCount: number
   games: CollectionGamePreview[]
 }
+
+export type FriendCollection = {
+  collection: Collection
+  friends: Array<{ userId: string; username: string | null }>
+}

@@ -12,7 +12,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1rem 1.1rem;
-  max-width: 32rem;
+  max-width: 36rem;
 }
 
 .friends-section h2 {
@@ -67,5 +67,16 @@
 
 .friend-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.friend-list a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.friend-list a:hover {
+  text-decoration: underline;
 }

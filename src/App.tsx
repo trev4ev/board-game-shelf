@@ -11,6 +11,7 @@ import { CollectionPage } from './pages/CollectionPage'
 import { CollectionSettingsPage } from './pages/CollectionSettingsPage'
 import { EditGamePage } from './pages/EditGamePage'
 import { FriendsPage } from './pages/FriendsPage'
+import { FriendCollectionsPage } from './pages/FriendCollectionsPage'
 import { GameDetailPage } from './pages/GameDetailPage'
 import { GamesNewRedirect } from './pages/GamesNewRedirect'
 import { HomePage } from './pages/HomePage'
@@ -34,6 +35,7 @@ export default function App() {
             <Route element={<RequireUsername />}>
               <Route index element={<HomePage />} />
               <Route path="friends" element={<FriendsPage />} />
+              <Route path="friends/:username" element={<FriendCollectionsPage />} />
               <Route path="c/:collectionId/settings" element={<CollectionSettingsPage />} />
               <Route path="c/:collectionId/games/new" element={<AddGameLayout />}>
                 <Route index element={<AddGameSearchPage />} />

@@ -4,17 +4,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useCollections } from '../auth/CollectionProvider'
 import { Button, ButtonLink } from '../components/Button'
-import { createCollection, listCollectionSummaries } from '../lib/collections'
-import type { CollectionSummary } from '../types/collection'
+import { CollectionCard } from '../components/CollectionCard'
+import {
+  createCollection,
+  listCollectionSummaries,
+  listFriendCollections,
+} from '../lib/collections'
+import { excludeCollectionIds, friendNamesLabel } from '../lib/friendCollections'
+import { gameCountLabel, memberCountLabel } from '../lib/collectionDisplay'
+import { listFriendships } from '../lib/friends'
+import type { CollectionSummary, FriendCollection } from '../types/collection'
+import '../components/CollectionCard.css'
 import './HomePage.css'
-
-function gameCountLabel(count: number) {
-  return `${count} ${count === 1 ? 'game' : 'games'}`
-}
-
-function memberCountLabel(count: number) {
-  return `${count} ${count === 1 ? 'member' : 'members'}`
-}
 
 export function HomePage() {
   const { user } = useAuth()
@@ -26,6 +27,11 @@ export function HomePage() {
   const [summaries, setSummaries] = useState<Map<string, CollectionSummary>>(
     () => new Map(),
   )
+  const [friendCollections, setFriendCollections] = useState<FriendCollection[]>([])
+  const [friendSummaries, setFriendSummaries] = useState<Map<string, CollectionSummary>>(
+    () => new Map(),
+  )
+  const [friendsLoading, setFriendsLoading] = useState(false)
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -48,6 +54,54 @@ export function HomePage() {
       cancelled = true
     }
   }, [accepted])
+
+  useEffect(() => {
+    if (!user) {
+      setFriendCollections([])
+      setFriendSummaries(new Map())
+      return
+    }
+    let cancelled = false
+    setFriendsLoading(true)
+    const mine = new Set(accepted.map((item) => item.collection.id))
+    listFriendships(user.id)
+      .then((rows) => {
+        const friends = rows.filter((row) => row.status === 'accepted')
+        const usernames = new Map(
+          friends.map((row) => [row.otherUserId, row.otherUsername]),
+        )
+        return listFriendCollections([...usernames.keys()], usernames)
+      })
+      .then(async (items) => {
+        const visible = excludeCollectionIds(items, mine)
+        if (cancelled) return
+        setFriendCollections(visible)
+        if (visible.length === 0) {
+          setFriendSummaries(new Map())
+          return
+        }
+        try {
+          const next = await listCollectionSummaries(
+            visible.map((item) => item.collection.id),
+          )
+          if (!cancelled) setFriendSummaries(next)
+        } catch {
+          if (!cancelled) setFriendSummaries(new Map())
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFriendCollections([])
+          setFriendSummaries(new Map())
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setFriendsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [accepted, user])
 
   function openCreate() {
     setError(null)
@@ -87,8 +141,8 @@ export function HomePage() {
           Sign in to create a collection, invite co-owners, and tag friends.
         </p>
         <p className="hint">
-          Anyone with a collection link can browse without signing in. Use Copy
-          link on a shelf — the home page is each person's own collections.
+          Anyone with a collection link can browse without signing in. After you
+          sign in, friends' shelves also show up here.
         </p>
         <div className="home-actions">
           <ButtonLink to="/login" variant="primary">
@@ -138,39 +192,14 @@ export function HomePage() {
         <ul className="collection-card-list">
           {accepted.map((item) => {
             const summary = summaries.get(item.collection.id)
-            const games = summary?.games ?? []
             return (
               <li key={item.collection.id}>
-                <Link to={`/c/${item.collection.id}`} className="collection-card">
-                  <strong>{item.collection.name}</strong>
-                  {games.length > 0 ? (
-                    <span className="collection-card-games">
-                      {games.map((game) =>
-                        game.thumbnailUrl ? (
-                          <img
-                            key={game.id}
-                            src={game.thumbnailUrl}
-                            alt={game.name}
-                            title={game.name}
-                          />
-                        ) : (
-                          <span
-                            key={game.id}
-                            className="collection-card-thumb-placeholder"
-                            title={game.name}
-                          />
-                        ),
-                      )}
-                    </span>
-                  ) : (
-                    <span className="collection-card-empty">No games yet</span>
-                  )}
-                  <span className="collection-card-meta">
-                    {gameCountLabel(summary?.gameCount ?? 0)}
-                    {' · '}
-                    {memberCountLabel(summary?.memberCount ?? 1)}
-                  </span>
-                </Link>
+                <CollectionCard
+                  to={`/c/${item.collection.id}`}
+                  name={item.collection.name}
+                  games={summary?.games ?? []}
+                  meta={`${gameCountLabel(summary?.gameCount ?? 0)} · ${memberCountLabel(summary?.memberCount ?? 1)}`}
+                />
               </li>
             )
           })}
@@ -186,6 +215,34 @@ export function HomePage() {
           </li>
         </ul>
       )}
+
+      <div className="home-section">
+        <h2>Friends' collections</h2>
+        {friendsLoading && <p className="hint">Loading friends' shelves…</p>}
+        {!friendsLoading && friendCollections.length === 0 && (
+          <p className="hint">
+            Add friends to browse their shelves.{' '}
+            <Link to="/friends">Find friends</Link>
+          </p>
+        )}
+        {!friendsLoading && friendCollections.length > 0 && (
+          <ul className="collection-card-list">
+            {friendCollections.map((item) => {
+              const summary = friendSummaries.get(item.collection.id)
+              return (
+                <li key={item.collection.id}>
+                  <CollectionCard
+                    to={`/c/${item.collection.id}`}
+                    name={item.collection.name}
+                    games={summary?.games ?? []}
+                    meta={`${gameCountLabel(summary?.gameCount ?? 0)} · ${friendNamesLabel(item.friends)}`}
+                  />
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
 
       <dialog
         ref={dialogRef}

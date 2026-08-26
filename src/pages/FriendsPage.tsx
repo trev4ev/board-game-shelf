@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { Button } from '../components/Button'
+import { Button, ButtonLink } from '../components/Button'
 import {
   acceptFriendRequest,
   deleteFriendship,
@@ -113,8 +113,8 @@ export function FriendsPage() {
       <section>
         <h1>Friends</h1>
         <p className="lede">
-          Sign in to add friends and tag them when you log a play.{' '}
-          <Link to="/login">Sign in</Link>
+          Sign in to add friends, browse their collections, and tag them when
+          you log a play. <Link to="/login">Sign in</Link>
         </p>
       </section>
     )
@@ -126,8 +126,8 @@ export function FriendsPage() {
     <section className="friends-page">
       <h1>Friends</h1>
       <p className="lede">
-        Add people by username so you can tag them on plays. Anyone without an
-        account can still be logged as a guest name.
+        Add people by username to browse their shelves and tag them on plays.
+        Anyone without an account can still be logged as a guest name.
       </p>
       {error && <p className="error">{error}</p>}
       {hint && <p className="hint">{hint}</p>}
@@ -159,7 +159,15 @@ export function FriendsPage() {
                 <li key={profile.id}>
                   <span>{profile.username}</span>
                   {existing?.status === 'accepted' ? (
-                    <span className="hint">Friends</span>
+                    <span className="friend-actions">
+                      {profile.username ? (
+                        <ButtonLink variant="ghost" to={`/friends/${profile.username}`}>
+                          Collections
+                        </ButtonLink>
+                      ) : (
+                        <span className="hint">Friends</span>
+                      )}
+                    </span>
                   ) : existing?.status === 'pending' ? (
                     <span className="hint">Pending</span>
                   ) : (
@@ -233,14 +241,25 @@ export function FriendsPage() {
           <ul className="friend-list">
             {friends.map((row) => (
               <li key={row.id}>
-                <span>{row.otherUsername ?? 'Unknown'}</span>
-                <Button
-                  variant="ghost"
-                  onClick={() => void remove(row, 'Unfriended')}
-                  disabled={busy}
-                >
-                  Unfriend
-                </Button>
+                {row.otherUsername ? (
+                  <Link to={`/friends/${row.otherUsername}`}>{row.otherUsername}</Link>
+                ) : (
+                  <span>Unknown</span>
+                )}
+                <span className="friend-actions">
+                  {row.otherUsername && (
+                    <ButtonLink variant="ghost" to={`/friends/${row.otherUsername}`}>
+                      Collections
+                    </ButtonLink>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => void remove(row, 'Unfriended')}
+                    disabled={busy}
+                  >
+                    Unfriend
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>

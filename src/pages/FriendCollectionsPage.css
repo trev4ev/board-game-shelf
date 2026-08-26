@@ -1,0 +1,19 @@
+.friend-collections-page {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.friend-collections-page h1 {
+  margin: 0;
+}
+
+.collection-back {
+  margin: 0;
+}
+
+.friend-collections-locked {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
